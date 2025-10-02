@@ -1,0 +1,13 @@
+:root {
+    --blue-logo: #004685;
+    --red-logo: #C4161C;
+    --bg-gray: #EFEFEF;
+}
+
+.tracer {
+    outline: 1px solid red;
+}
+
+.tracer-orange {
+    outline: 1px solid orange;
+}

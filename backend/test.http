@@ -1,0 +1,23 @@
+### Get an employee
+GET http://localhost:3000/form/checker
+
+### FORM ADD -----------------------------------------------------------
+POST http://localhost:3000/form/add
+Content-Type: application/json
+
+{
+    "room_number": "0021",
+    "instructor_name": "UT",
+    "instructor_presence": "1",
+    "remarks": "All Good",
+    "photo": "",
+    "checker_id": "1"
+}
+
+
+### DELETE form by id
+DELETE http://localhost:3000/form/delete/13
+
+###
+GET http://localhost:3000/schedules/json/1
+

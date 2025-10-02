@@ -1,0 +1,15 @@
+:root {
+    --blue-logo: #004685;
+}
+
+.tracer {
+    outline: 1px solid red;
+}
+
+.tracer-blue {
+    outline: 1px solid blue;
+}
+
+.input {
+    border-radius: 5px;
+}

@@ -1,0 +1,43 @@
+{
+    "schedules": [
+        {
+            "id": "S10",
+            "room_id": "204",
+            "room_name": "204 PHY LAB",
+            "day": "Thursday",
+            "schedule_number": 1,
+            "start_time": "00:01:00",
+            "end_time": "23:00:00",
+            "subject": "GENMATH",
+            "section": "STEM 2025 C",
+            "instructor": "olok",
+            "floor": "second"
+        },
+        {
+            "id": "S11",
+            "room_id": "201",
+            "room_name": "201 COMPLAB",
+            "day": "Friday",
+            "schedule_number": 1,
+            "start_time": "17:30:00",
+            "end_time": "20:30:00",
+            "subject": "INFOSE 2",
+            "section": "BSIT 4th Year",
+            "instructor": "Norry Frejoles",
+            "floor": "second"
+        },
+        {
+            "id": "S12",
+            "room_id": "107",
+            "room_name": "107 COMPLAB",
+            "day": "Friday",
+            "schedule_number": 1,
+            "start_time": "21:30:00",
+            "end_time": "23:30:00",
+            "subject": "INFOSE 2",
+            "section": "BSIT 4th Year",
+            "instructor": "Norry Frejoles",
+            "floor": "second"
+        }
+    ]
+}

@@ -1,0 +1,50 @@
+### Get user
+GET http://localhost:3000/user
+
+
+### USER Register
+POST http://localhost:3000/user/register
+Content-Type: application/json
+
+{
+    "email": "notadmin@gmail.com",
+    "password": "notadmin",
+    "user_role": "checker"
+}
+
+### USER LOGIN
+POST http://localhost:3000/user/login
+Content-Type: application/json
+
+{
+    "email": "ojontash@gmail.com",
+    "password": "rainbow"
+}
+
+### EDIT User Details
+PUT http://localhost:3000/user/edit/details/2
+Content-Type: application/json
+
+{
+    "first_name": "ojontash",
+    "last_name": "ochinchin"
+}
+
+### EDIT User Password
+PUT http://localhost:3000/user/edit/password/2
+Content-Type: application/json
+
+{
+    "password": "rainbow"
+}
+
+### EDIT User Photo
+PUT http://localhost:3000/user/edit/image/2
+Content-Type: application/json
+
+{
+    "image": "thisisanimagedotcom"
+}
+
+### DELETE form by id
+DELETE http://localhost:3000/user/
