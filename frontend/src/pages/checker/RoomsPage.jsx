@@ -40,32 +40,46 @@ const RoomsPage = () => {
                 return;
             }
 
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/schedules`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // Fetch schedules from both sources
+            const [jsonResponse, mysqlResponse] = await Promise.all([
+                axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).catch((error) => {
+                    console.log("JSON schedules error:", error);
+                    return { data: { files: [] } }; // Fallback to empty files array
+                }),
 
-            // Log the response to inspect the structure
-            console.log("Response Data:", response.data);
+                axios.get(`${import.meta.env.VITE_API_URL}/schedules/current`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).catch((error) => {
+                    console.log("MySQL schedules error:", error);
+                    return { data: { schedules: [] } }; // Fallback to empty schedules array
+                })
+            ]);
 
-            // If response.data is an array, use flatMap
-            if (Array.isArray(response.data)) {
-                const allSchedules = response.data.flatMap(file => file.schedules || []);
-                setData(allSchedules);
+            // Flatten schedules from JSON files
+            const jsonSchedules = (jsonResponse.data.files || []).flatMap(file =>
+                (file.schedules || []).map(schedule => ({
+                    ...schedule,
+                    source: 'json',
+                    source_file: file.filename
+                }))
+            );
 
-            } else if (response.data.schedules) {
-                // If response.data is an object with a 'schedules' property
-                const allSchedules = response.data.schedules || [];
-                setData(allSchedules);
+            // Get MySQL schedules
+            const mysqlSchedules = (mysqlResponse.data.schedules || []).map(schedule => ({
+                ...schedule,
+                source: 'mysql'
+            }));
 
-            } else {
-                // If the structure is neither an array nor contains 'schedules'
-                console.error("Unexpected response structure:", response.data);
-                setData([]);
-            }
+            // Combine both sources
+            const allSchedules = [...jsonSchedules, ...mysqlSchedules];
+            console.log("Total schedules loaded:", allSchedules.length, "(JSON:", jsonSchedules.length, "MySQL:", mysqlSchedules.length, ")");
+            setData(allSchedules);
 
         } catch (error) {
             console.log("Error sa pag fetch", error);
-            setData([]); // Set empty array in case of error
+            setData([]); // Set empty array on error
         }
     };
 

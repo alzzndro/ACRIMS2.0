@@ -27,6 +27,7 @@ const FormByIdPage = () => {
             setFormData((prevData) => ({
                 ...prevData,
                 room_number: schedule.schedule.room_id,
+                instructor_email: schedule.schedule?.instructor_email,
                 instructor_name: schedule.schedule.instructor
             }));
         }
@@ -35,12 +36,21 @@ const FormByIdPage = () => {
     // Methods ----------------------------------------------------------------------
     const fetchSchedule = async () => {
         try {
-            const token = localStorage.getItem("token");
-            const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/schedules/${id}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setSchedule(response.data);
+            try {
+                const token = localStorage.getItem("token");
+                const response = await axios.get(
+                    `${import.meta.env.VITE_API_URL}/schedules/${id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setSchedule(response.data);
+            } catch {
+                const token = localStorage.getItem("token");
+                const response = await axios.get(
+                    `${import.meta.env.VITE_API_URL}/schedules/json/${id}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setSchedule(response.data);
+            }
         } catch (error) {
             console.log("Error fetching form:", error);
         }
@@ -50,6 +60,7 @@ const FormByIdPage = () => {
     const [formData, setFormData] = useState({
         room_number: '',
         instructor_name: '',
+        instructor_email: '',
         instructor_presence: false,
         remarks: '',
         photo: null
@@ -141,7 +152,6 @@ const FormByIdPage = () => {
             theme: "light",
         });
     }
-
 
     if (!schedule) return <Loading />
     if (loading) return <Loading />

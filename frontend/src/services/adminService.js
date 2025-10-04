@@ -313,15 +313,9 @@ class AdminService {
         }
     }
 
-    async createScheduleFile(filename) {
-        return this.apiCall('/schedules/files', {
-            method: 'POST',
-            data: { filename }
-        });
-    }
 
     async deleteScheduleFile(filename) {
-        return this.apiCall(`/schedules/files/${filename}`, {
+        return this.apiCall(`/schedules/json/files/${filename}`, {
             method: 'DELETE'
         });
     }
@@ -330,11 +324,13 @@ class AdminService {
         const formData = new FormData();
         formData.append('scheduleFile', file);
 
-        return this.apiCall('/schedules/upload', {
+        return this.apiCall('/schedules/json/upload', {
             method: 'POST',
             data: formData
         });
     }
+
+    // JSON schedules are read-only - no CRUD operations allowed
 
     // Export data
     exportToCSV(data, filename) {

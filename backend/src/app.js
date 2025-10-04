@@ -8,6 +8,7 @@ const app = express();
 import { router as monitoringFormRouter } from './routes/monitoring_form.route.js';
 import { router as usersRouter } from './routes/users.routes.js';
 import { router as scheduleRouter } from './routes/schedules.route.js';
+import { router as scheduleJsonRouter } from './routes/schedules-json.route.js';
 
 
 // import fs for photo
@@ -25,7 +26,9 @@ middlewares.forEach(mw => app.use(mw));
 // ---------------------- ROUTES ----------------------
 app.use('/form', monitoringFormRouter);
 app.use('/user', usersRouter);
+app.use('/schedules/json', scheduleJsonRouter);
 app.use('/schedules', scheduleRouter);
+
 
 // ---------------------- STATIC FILES ----------------------
 app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));

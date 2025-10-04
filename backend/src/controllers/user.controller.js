@@ -1,6 +1,6 @@
-import * as service from '../services/users.services.js'
-import jwt from 'jsonwebtoken'
-
+import * as service from '../services/users.services.js';
+import jwt from 'jsonwebtoken';
+import { customAlphabet } from 'nanoid';
 
 // GET ALL USER -------------------------------------------------------------------------------------------
 export async function getAllUsers(req, res) {
@@ -16,14 +16,20 @@ export async function getAllUsers(req, res) {
 // ADD USER -------------------------------------------------------------------------------------------
 export async function addUser(req, res) {
     try {
-        const { email, password, user_role } = req.body
+        const { email, first_name, last_name, password, user_role } = req.body
+
+        const uid = customAlphabet('1234567890', 6);
+
+        const user_id = uid();
+
+        console.log(user_id);
 
         // check if input contains no value
         if (!email || !password || !user_role) {
-            return res.status(400).send("Bad Request! No value or lacks value! ")
+            return res.status(400).send("Bad Request! No value or lacks value! ");
         } else {
-            await service.addUser({ email, password, user_role })
-            res.status(201).send("User added successfully!")
+            await service.addUser({ user_id, email, password, first_name, last_name, user_role });
+            res.status(201).send("User added successfully!");
         }
 
     } catch (error) {
@@ -82,6 +88,31 @@ export async function loginUser(req, res) {
 // EDIT USER -------------------------------------------------------------------------------------------
 export async function editUserDetails(req, res) {
     try {
+        let { user_id, first_name, last_name } = req.body;
+        const id = user_id;
+
+        first_name = first_name ? first_name.toLowerCase() : "";
+        last_name = last_name ? last_name.toLowerCase() : "";
+
+        if (!first_name || !last_name) {
+            res.status(400).send("Please fill out the form!");
+        }
+
+        const result = await service.editUserDetails({ first_name, last_name }, id);
+
+        if (result.affectedRows === 0) {
+            res.status(404).send(`${id} is not found`);
+        }
+
+        res.status(200).json({ success: true, message: `${id} Updated successfully!` });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
+// EDIT USER -------------------------------------------------------------------------------------------
+export async function editDetails(req, res) {
+    try {
         let { first_name, last_name } = req.body;
         const id = req.user.id;
 
@@ -106,8 +137,8 @@ export async function editUserDetails(req, res) {
 
 export async function editUserPassword(req, res) {
     try {
-        const { password } = req.body
-        const id = req.params.id
+        const { password } = req.body;
+        const id = req.params.id;
 
         if (!password) {
             res.status(400).send("Please fill out the form")

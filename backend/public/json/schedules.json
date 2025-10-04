@@ -4,13 +4,14 @@
       "id": "S1",
       "room_id": "204",
       "room_name": "204 PHY LAB",
-      "day": "Monday",
+      "day": "Saturday",
       "schedule_number": 1,
-      "start_time": "08:00:00",
-      "end_time": "09:30:00",
+      "start_time": "01:00:00",
+      "end_time": "23:59:00",
       "subject": "MANPRIN",
       "section": "BSA 251-1 Bridging",
-      "instructor": "MS.BENJAMIN",
+      "instructor": "Mr. Torres",
+      "instructor_email": "jbtorres.student@asiancollege.edu.ph",
       "floor": "second"
     },
     {

@@ -30,6 +30,7 @@ export async function addForm(req, res) {
         const {
             room_number,
             instructor_name,
+            instructor_email,
             instructor_presence,
             remarks,
             photo,
@@ -47,8 +48,8 @@ export async function addForm(req, res) {
             checker_id: req.user.id,
         })
 
-        if (!isPresent) {
-            await mailer.sendEmailAbsent("pokss132@gmail.com");
+        if (!isPresent && instructor_email) {
+            await mailer.sendEmailAbsent(instructor_email);
             return res.status(201).json({
                 success: true,
                 message: "Form added and email sent successfully!",

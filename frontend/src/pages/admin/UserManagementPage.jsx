@@ -105,6 +105,7 @@ export default function UserManagementPage() {
 
         try {
             await adminService.updateUser({
+                user_id: editingUser.user_id,
                 first_name: editingUser.first_name,
                 last_name: editingUser.last_name
             });
@@ -126,14 +127,14 @@ export default function UserManagementPage() {
             fetchUsers();
         } catch (err) {
             console.error('Error deleting user:', err);
-            alert('Error deleting user: ' + (err.response?.data || err.message));
+            alert('Cannot Delete Own Account');
         }
     }
 
     const getRoleBadge = (role) => {
         const styles = {
-            admin: 'bg-red-500/20 text-red-300 border-red-500/30',
-            checker: 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+            admin: 'bg-red-500/20 text-red-900 border-black/50',
+            checker: 'bg-blue-500/20 text-blue-900 border-black/50'
         };
         return styles[role] || styles.checker;
     };
@@ -254,7 +255,11 @@ export default function UserManagementPage() {
                                                     {user.first_name?.[0]?.toUpperCase() || 'U'}
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium">{user.first_name} {user.last_name}</p>
+                                                    <p className="font-medium">
+                                                        {user.first_name.charAt(0).toUpperCase() + user.first_name.slice(1)}
+                                                        {' '}
+                                                        {user.last_name.charAt(0).toUpperCase() + user.last_name.slice(1)}
+                                                    </p>
                                                     <p className="text-sm text-slate-400">ID: {user.user_id}</p>
                                                 </div>
                                             </div>
@@ -318,7 +323,7 @@ export default function UserManagementPage() {
             {/* Add User Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-900 rounded-2xl p-6 w-full max-w-md">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-semibold">Add New User</h3>
                             <button
@@ -337,7 +342,7 @@ export default function UserManagementPage() {
                                         type="text"
                                         value={newUser.first_name}
                                         onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                        className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                     />
                                 </div>
                                 <div>
@@ -346,7 +351,7 @@ export default function UserManagementPage() {
                                         type="text"
                                         value={newUser.last_name}
                                         onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                        className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                     />
                                 </div>
                             </div>
@@ -357,7 +362,7 @@ export default function UserManagementPage() {
                                     type="email"
                                     value={newUser.email}
                                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                    className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                 />
                             </div>
 
@@ -367,7 +372,7 @@ export default function UserManagementPage() {
                                     type="password"
                                     value={newUser.password}
                                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                    className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                 />
                             </div>
 
@@ -376,7 +381,7 @@ export default function UserManagementPage() {
                                 <select
                                     value={newUser.user_role}
                                     onChange={(e) => setNewUser({ ...newUser, user_role: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                    className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                 >
                                     <option value="checker">Checker</option>
                                     <option value="admin">Admin</option>
@@ -405,7 +410,7 @@ export default function UserManagementPage() {
             {/* Edit User Modal */}
             {showEditModal && editingUser && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-900 rounded-2xl p-6 w-full max-w-md">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-semibold">Edit User</h3>
                             <button
@@ -419,12 +424,23 @@ export default function UserManagementPage() {
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-2">ID</label>
+                                    <input
+                                        type="text"
+                                        disabled
+                                        value={editingUser.user_id}
+                                        onChange={(e) => setEditingUser({ ...editingUser, user_id: e.target.value })}
+                                        className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
+                                    />
+                                </div>
+                                <b />
+                                <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-2">First Name</label>
                                     <input
                                         type="text"
                                         value={editingUser.first_name}
                                         onChange={(e) => setEditingUser({ ...editingUser, first_name: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                        className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                     />
                                 </div>
                                 <div>
@@ -433,7 +449,7 @@ export default function UserManagementPage() {
                                         type="text"
                                         value={editingUser.last_name}
                                         onChange={(e) => setEditingUser({ ...editingUser, last_name: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                        className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                     />
                                 </div>
                             </div>
@@ -444,7 +460,7 @@ export default function UserManagementPage() {
                                     type="email"
                                     value={editingUser.email}
                                     onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 focus:border-neon/50 focus:outline-none"
+                                    className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                     disabled
                                 />
                                 <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
@@ -472,7 +488,7 @@ export default function UserManagementPage() {
             {/* Delete Confirmation Modal */}
             {showDeleteModal && deletingUser && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-900 rounded-2xl p-6 w-full max-w-md">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-semibold text-red-400">Delete User</h3>
                             <button
@@ -483,7 +499,7 @@ export default function UserManagementPage() {
                             </button>
                         </div>
 
-                        <p className="text-slate-300 mb-6">
+                        <p className="text-black mb-6">
                             Are you sure you want to delete <strong>{deletingUser.first_name} {deletingUser.last_name}</strong>?
                             This action cannot be undone.
                         </p>
@@ -491,13 +507,13 @@ export default function UserManagementPage() {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="flex-1 px-4 py-2 rounded-lg border border-white/20 hover:bg-white/5 transition-colors"
+                                className="flex-1 px-4 py-2 rounded-lg border border-black hover:bg-white/5 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleDeleteUser}
-                                className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors font-semibold"
+                                className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors font-semibold"
                             >
                                 Delete User
                             </button>
@@ -508,3 +524,4 @@ export default function UserManagementPage() {
         </AdminLayout>
     );
 }
+

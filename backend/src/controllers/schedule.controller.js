@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 // Configure multer for JSON file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const jsonDirPath = path.join(__dirname, '../../public/json');
+        const jsonDirPath = path.join(process.cwd(), 'public', 'json');
         cb(null, jsonDirPath);
     },
     filename: (req, file, cb) => {
@@ -38,7 +38,7 @@ const upload = multer({
 
 // Helper function to get JSON directory path
 function getJsonDirPath() {
-    return path.join(__dirname, '../../public/json');
+    return path.join(process.cwd(), 'public', 'json');
 }
 
 // Helper function to read all schedule files
@@ -184,202 +184,9 @@ export async function scheduleById(req, res) {
     }
 }
 
-// Create a new schedule in a specific file
-export async function createSchedule(req, res) {
-    const { filename } = req.params;
-    const scheduleData = req.body;
+// JSON files are immutable for schedule operations
+// Only file management (upload/delete) is allowed
 
-    try {
-        const jsonDirPath = getJsonDirPath();
-        const filePath = path.join(jsonDirPath, filename);
-
-        // Check if file exists
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({
-                success: false,
-                error: 'Schedule file not found'
-            });
-        }
-
-        // Read existing file
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const fileData = JSON.parse(fileContent);
-
-        // Generate new ID
-        const existingIds = fileData.schedules.map(s => s.id);
-        const newId = `S${Math.max(...existingIds.map(id => parseInt(id.replace('S', ''))), 0) + 1}`;
-
-        // Add new schedule
-        const newSchedule = {
-            id: newId,
-            ...scheduleData,
-            created_at: new Date().toISOString()
-        };
-
-        fileData.schedules.push(newSchedule);
-
-        // Write back to file
-        await writeJsonFile(filename, fileData);
-
-        res.json({
-            success: true,
-            schedule: newSchedule,
-            message: 'Schedule created successfully'
-        });
-    } catch (error) {
-        console.error('Error creating schedule:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error creating schedule',
-            message: error.message
-        });
-    }
-}
-
-// Update a schedule
-export async function updateSchedule(req, res) {
-    const { filename, id } = req.params;
-    const updateData = req.body;
-
-    try {
-        const jsonDirPath = getJsonDirPath();
-        const filePath = path.join(jsonDirPath, filename);
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({
-                success: false,
-                error: 'Schedule file not found'
-            });
-        }
-
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const fileData = JSON.parse(fileContent);
-
-        const scheduleIndex = fileData.schedules.findIndex(s => s.id === id);
-        if (scheduleIndex === -1) {
-            return res.status(404).json({
-                success: false,
-                error: 'Schedule not found'
-            });
-        }
-
-        // Update schedule
-        fileData.schedules[scheduleIndex] = {
-            ...fileData.schedules[scheduleIndex],
-            ...updateData,
-            updated_at: new Date().toISOString()
-        };
-
-        await writeJsonFile(filename, fileData);
-
-        res.json({
-            success: true,
-            schedule: fileData.schedules[scheduleIndex],
-            message: 'Schedule updated successfully'
-        });
-    } catch (error) {
-        console.error('Error updating schedule:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error updating schedule',
-            message: error.message
-        });
-    }
-}
-
-// Delete a schedule
-export async function deleteSchedule(req, res) {
-    const { filename, id } = req.params;
-
-    try {
-        const jsonDirPath = getJsonDirPath();
-        const filePath = path.join(jsonDirPath, filename);
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({
-                success: false,
-                error: 'Schedule file not found'
-            });
-        }
-
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const fileData = JSON.parse(fileContent);
-
-        const scheduleIndex = fileData.schedules.findIndex(s => s.id === id);
-        if (scheduleIndex === -1) {
-            return res.status(404).json({
-                success: false,
-                error: 'Schedule not found'
-            });
-        }
-
-        // Remove schedule
-        const deletedSchedule = fileData.schedules.splice(scheduleIndex, 1)[0];
-
-        await writeJsonFile(filename, fileData);
-
-        res.json({
-            success: true,
-            deletedSchedule,
-            message: 'Schedule deleted successfully'
-        });
-    } catch (error) {
-        console.error('Error deleting schedule:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error deleting schedule',
-            message: error.message
-        });
-    }
-}
-
-// Create a new schedule file
-export async function createScheduleFile(req, res) {
-    const { filename } = req.body;
-
-    if (!filename) {
-        return res.status(400).json({
-            success: false,
-            error: 'Filename is required'
-        });
-    }
-
-    try {
-        const jsonDirPath = getJsonDirPath();
-        const fullFilename = filename.endsWith('.json') ? filename : `${filename}.json`;
-        const filePath = path.join(jsonDirPath, fullFilename);
-
-        // Check if file already exists
-        if (fs.existsSync(filePath)) {
-            return res.status(409).json({
-                success: false,
-                error: 'File already exists'
-            });
-        }
-
-        // Create new file with empty schedules array
-        const newFileData = {
-            schedules: [],
-            created_at: new Date().toISOString(),
-            description: `Schedule file for ${filename}`
-        };
-
-        await writeJsonFile(fullFilename, newFileData);
-
-        res.json({
-            success: true,
-            filename: fullFilename,
-            message: 'Schedule file created successfully'
-        });
-    } catch (error) {
-        console.error('Error creating schedule file:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error creating schedule file',
-            message: error.message
-        });
-    }
-}
 
 // Delete a schedule file
 export async function deleteScheduleFile(req, res) {

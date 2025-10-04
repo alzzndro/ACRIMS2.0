@@ -16,7 +16,7 @@ export async function sendEmailAbsent(to) {
             from: process.env.MAILER_EMAIL,
             to,
             subject: `Good day! ${to}`,
-            text: "We would like to inform you that you're absent today!"
+            text: "This is from the nurses office, we would like to inform you that you are absent or not in your respective classroom today!"
         }
 
         console.log(`Message sent to ${to}`)

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
     Calendar, Plus, Edit, Trash2, Search, Filter, Clock, MapPin,
-    User, BookOpen, X, AlertTriangle, Mail
+    User, BookOpen, X, AlertTriangle, Mail, Upload, FileText,
+    Download, FolderOpen, Trash
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
@@ -17,17 +18,21 @@ const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => {
 
 export default function ScheduleManagementPage() {
     const [schedules, setSchedules] = useState([]);
+    const [jsonFiles, setJsonFiles] = useState([]);
     const [filteredSchedules, setFilteredSchedules] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [dayFilter, setDayFilter] = useState('all');
     const [roomFilter, setRoomFilter] = useState('all');
+    const [dataSource, setDataSource] = useState('all'); // 'all', 'mysql', 'json'
 
     // Modals
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showJsonModal, setShowJsonModal] = useState(false);
+    const [showUploadModal, setShowUploadModal] = useState(false);
 
     // Form states
     const [editingSchedule, setEditingSchedule] = useState(null);
@@ -44,8 +49,9 @@ export default function ScheduleManagementPage() {
         instructor_email: '',
         floor: 'first'
     });
+    const [uploadFile, setUploadFile] = useState(null);
 
-    // const isDark = false; // Admin side is always light theme
+    //     const isDark = false; // Admin side is always light theme
 
     useEffect(() => {
         fetchData();
@@ -71,8 +77,12 @@ export default function ScheduleManagementPage() {
             filtered = filtered.filter(schedule => schedule.room_id === roomFilter);
         }
 
+        if (dataSource !== 'all') {
+            filtered = filtered.filter(schedule => schedule.source === dataSource);
+        }
+
         setFilteredSchedules(filtered);
-    }, [schedules, searchQuery, dayFilter, roomFilter]);
+    }, [schedules, searchQuery, dayFilter, roomFilter, dataSource]);
 
     useEffect(() => {
         filterSchedules();
@@ -82,12 +92,36 @@ export default function ScheduleManagementPage() {
         setLoading(true);
         setError(null);
         try {
-            const schedulesData = await adminService.getAllSchedules();
-            setSchedules(schedulesData.schedules || []);
+            // Fetch both MySQL and JSON schedules
+            const [mysqlData, jsonData] = await Promise.all([
+                adminService.getAllSchedules().catch(() => ({ schedules: [] })),
+                adminService.getScheduleFiles().catch(() => ({ files: [] }))
+            ]);
+
+            // Process MySQL schedules
+            const mysqlSchedules = (mysqlData.schedules || []).map(schedule => ({
+                ...schedule,
+                source: 'mysql'
+            }));
+
+            // Process JSON schedules
+            const jsonSchedules = (jsonData.files || []).flatMap(file =>
+                (file.schedules || []).map(schedule => ({
+                    ...schedule,
+                    source: 'json',
+                    source_file: file.filename
+                }))
+            );
+
+            // Combine both sources
+            const allSchedules = [...mysqlSchedules, ...jsonSchedules];
+            setSchedules(allSchedules);
+            setJsonFiles(jsonData.files || []);
         } catch (err) {
             console.error('Failed to fetch schedule data:', err);
             setError('Could not fetch schedule data');
             setSchedules([]);
+            setJsonFiles([]);
         } finally {
             setLoading(false);
         }
@@ -127,6 +161,14 @@ export default function ScheduleManagementPage() {
             return;
         }
 
+        // Only MySQL schedules can be edited
+        if (editingSchedule.source !== 'mysql') {
+            alert('JSON schedules are read-only. To modify, please update the JSON file and re-upload.');
+            setShowEditModal(false);
+            setEditingSchedule(null);
+            return;
+        }
+
         try {
             await adminService.updateSchedule(editingSchedule.id, editingSchedule);
             setShowEditModal(false);
@@ -140,13 +182,51 @@ export default function ScheduleManagementPage() {
 
     async function handleDeleteSchedule() {
         try {
-            await adminService.deleteSchedule(deletingSchedule.id);
-            setShowDeleteModal(false);
-            setDeletingSchedule(null);
-            fetchData();
+            // Only MySQL schedules can be deleted
+            if (deletingSchedule.source === 'mysql') {
+                await adminService.deleteSchedule(deletingSchedule.id);
+                setShowDeleteModal(false);
+                setDeletingSchedule(null);
+                fetchData();
+            } else {
+                alert('JSON schedules are read-only. To modify, please update the JSON file and re-upload.');
+            }
         } catch (err) {
             console.error('Error deleting schedule:', err);
             alert('Error deleting schedule: ' + (err.response?.data?.message || err.message));
+        }
+    }
+
+    // JSON File Management Functions
+
+    async function handleDeleteJsonFile(filename) {
+        if (!confirm(`Are you sure you want to delete ${filename}? This will delete all schedules in this file.`)) {
+            return;
+        }
+
+        try {
+            await adminService.deleteScheduleFile(filename);
+            fetchData();
+        } catch (err) {
+            console.error('Error deleting JSON file:', err);
+            alert('Error deleting JSON file: ' + (err.response?.data?.message || err.message));
+        }
+    }
+
+    async function handleUploadJsonFile() {
+        if (!uploadFile) {
+            alert('Please select a file to upload');
+            return;
+        }
+
+        try {
+            await adminService.uploadScheduleFile(uploadFile);
+            setShowUploadModal(false);
+            setUploadFile(null);
+            fetchData();
+        } catch (err) {
+            console.error('Error uploading JSON file:', err);
+            alert('Error uploading JSON file: ' + (err.response?.data?.message || err.message));
         }
     }
 
@@ -163,21 +243,37 @@ export default function ScheduleManagementPage() {
                             Schedule Management
                         </h1>
                         <p className="mt-2 text-gray-600">
-                            Manage class schedules in the database
+                            Manage class schedules in the database. JSON files are read-only for schedule data.
                         </p>
                     </div>
 
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
-                    >
-                        <Plus size={20} />
-                        Add Schedule
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowUploadModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
+                        >
+                            <Upload size={20} />
+                            Upload JSON
+                        </button>
+                        <button
+                            onClick={() => setShowJsonModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-semibold transition-colors"
+                        >
+                            <FileText size={20} />
+                            Manage Files
+                        </button>
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-black bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            <Plus size={20} />
+                            Add Schedule
+                        </button>
+                    </div>
                 </div>
 
                 {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                         <input
@@ -211,6 +307,16 @@ export default function ScheduleManagementPage() {
                         ))}
                     </select>
 
+                    <select
+                        value={dataSource}
+                        onChange={(e) => setDataSource(e.target.value)}
+                        className="px-4 py-3 rounded-xl border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
+                    >
+                        <option value="all">All Sources</option>
+                        <option value="mysql">MySQL Only</option>
+                        <option value="json">JSON Only</option>
+                    </select>
+
                     <button
                         onClick={fetchData}
                         className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors flex items-center justify-center gap-2"
@@ -221,7 +327,7 @@ export default function ScheduleManagementPage() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
@@ -229,6 +335,16 @@ export default function ScheduleManagementPage() {
                                 <p className="text-2xl font-bold text-gray-900">{schedules.length}</p>
                             </div>
                             <Calendar className="text-neon" size={24} />
+                        </div>
+                    </div>
+
+                    <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-600">JSON Files</p>
+                                <p className="text-2xl font-bold text-gray-900">{jsonFiles.length}</p>
+                            </div>
+                            <FileText className="text-purple-400" size={24} />
                         </div>
                     </div>
 
@@ -248,10 +364,41 @@ export default function ScheduleManagementPage() {
                                 <p className="text-sm text-gray-600">Filtered Results</p>
                                 <p className="text-2xl font-bold text-gray-900">{filteredSchedules.length}</p>
                             </div>
-                            <Filter className="text-purple-400" size={24} />
+                            <Filter className="text-green-400" size={24} />
                         </div>
                     </div>
                 </div>
+
+                {/* JSON Files Management */}
+                {jsonFiles.length > 0 && (
+                    <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm mb-8">
+                        <div className="p-6 border-b border-gray-200">
+                            <h2 className="text-lg font-semibold text-gray-900">JSON Schedule Files</h2>
+                        </div>
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {jsonFiles.map((file) => (
+                                    <div key={file.filename} className="p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="font-medium text-gray-900">{file.filename}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    {file.schedules?.length || 0} schedules
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDeleteJsonFile(file.filename)}
+                                                className="p-2 rounded-lg hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300"
+                                            >
+                                                <Trash size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Schedules Table */}
                 <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
@@ -280,6 +427,7 @@ export default function ScheduleManagementPage() {
                                         <th className="text-left p-4 text-sm font-medium text-gray-600">Room</th>
                                         <th className="text-left p-4 text-sm font-medium text-gray-600">Subject</th>
                                         <th className="text-left p-4 text-sm font-medium text-gray-600">Instructor</th>
+                                        <th className="text-left p-4 text-sm font-medium text-gray-600">Source</th>
                                         <th className="text-left p-4 text-sm font-medium text-gray-600">Actions</th>
                                     </tr>
                                 </thead>
@@ -335,25 +483,43 @@ export default function ScheduleManagementPage() {
                                                 </div>
                                             </td>
                                             <td className="p-4">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${schedule.source === 'mysql'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-blue-100 text-blue-800'
+                                                    }`}>
+                                                    {schedule.source === 'mysql' ? 'MySQL' : schedule.source_file}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
                                                 <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingSchedule({ ...schedule });
-                                                            setShowEditModal(true);
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <Edit size={16} className="text-gray-500 hover:text-neon" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setDeletingSchedule(schedule);
-                                                            setShowDeleteModal(true);
-                                                        }}
-                                                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <Trash2 size={16} className="text-red-400 hover:text-red-300" />
-                                                    </button>
+                                                    {schedule.source === 'mysql' ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingSchedule({ ...schedule });
+                                                                    setShowEditModal(true);
+                                                                }}
+                                                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                                                title="Edit Schedule"
+                                                            >
+                                                                <Edit size={16} className="text-gray-500 hover:text-neon" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setDeletingSchedule(schedule);
+                                                                    setShowDeleteModal(true);
+                                                                }}
+                                                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                                                title="Delete Schedule"
+                                                            >
+                                                                <Trash2 size={16} className="text-red-400 hover:text-red-300" />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-500 italic">
+                                                            Read-only (JSON)
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -756,6 +922,94 @@ export default function ScheduleManagementPage() {
                                     className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors font-semibold text-white"
                                 >
                                     Delete Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* JSON File Management Modal */}
+                {showJsonModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-semibold text-gray-900">Manage JSON Files</h3>
+                                <button
+                                    onClick={() => setShowJsonModal(false)}
+                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4 mb-6">
+                                <h4 className="text-lg font-medium text-gray-900">JSON Schedule Files</h4>
+                                {jsonFiles.length === 0 ? (
+                                    <p className="text-gray-600">No JSON files found. Upload a JSON file to get started.</p>
+                                ) : (
+                                    <ul className="space-y-2">
+                                        {jsonFiles.map(file => (
+                                            <li key={file.filename} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50">
+                                                <div>
+                                                    <span className="text-gray-900 font-medium">{file.filename}</span>
+                                                    <p className="text-sm text-gray-600">
+                                                        {file.schedules?.length || 0} schedules
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeleteJsonFile(file.filename)}
+                                                    className="p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                                                >
+                                                    <Trash size={16} className="text-red-400" />
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Upload JSON Modal */}
+                {showUploadModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-semibold text-gray-900">Upload JSON File</h3>
+                                <button
+                                    onClick={() => setShowUploadModal(false)}
+                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <p className="text-gray-600">Upload a JSON file containing schedule data. The file should contain an array of schedule objects.</p>
+                                <input
+                                    type="file"
+                                    accept=".json"
+                                    onChange={(e) => setUploadFile(e.target.files[0])}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700"
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Only JSON files are allowed. Maximum size: 10MB
+                                </p>
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowUploadModal(false)}
+                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUploadJsonFile}
+                                    className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
+                                >
+                                    Upload File
                                 </button>
                             </div>
                         </div>
