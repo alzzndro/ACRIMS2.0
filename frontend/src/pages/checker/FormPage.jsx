@@ -10,6 +10,7 @@ import Loading from '../../components/common/Loading'
 const FormPage = () => {
     // Loading
     const [loading, setLoading] = useState(false);
+    const [preview, setPreview] = useState(null);
 
     // Toast
     const invalidNotify = () => {
@@ -32,6 +33,7 @@ const FormPage = () => {
     const [formData, setFormData] = useState({
         room_number: '',
         instructor_name: '',
+        instructor_email: '',
         instructor_presence: false,
         remarks: '',
         photo: null,
@@ -40,10 +42,26 @@ const FormPage = () => {
     const handleChange = (e) => {
         const { name, type, checked, files, value } = e.target;
 
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value,
-        }));
+        if (type === "file" && files[0]) {
+            const file = files[0];
+
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: file,
+            }));
+
+            // Create image preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreview(reader.result); // Base64 string
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: type === 'checkbox' ? checked : value,
+            }));
+        }
     }
 
     const handleSubmit = async (e) => {
@@ -138,6 +156,19 @@ const FormPage = () => {
                         />
                     </div>
 
+                    {/* Instructor Email */}
+                    <div>
+                        <label className="block text-md font-medium text-gray-700 mb-1">Instructor Email</label>
+                        <input
+                            type="email"
+                            placeholder='Optional'
+                            name="instructor_email"
+                            value={formData.instructor_email}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border rounded"
+                        />
+                    </div>
+
                     {/* Instructor Presence */}
                     <div className="">
                         <label className="block text-md font-medium text-gray-700">Instructor Presence</label>
@@ -166,17 +197,26 @@ const FormPage = () => {
                     </div>
 
                     {/* Photo Upload / Camera */}
-                    <div>
-                        <label className="block text-md font-medium text-gray-700 mb-1">Upload Photo</label>
+                    <div className="">
+                        <label htmlFor="photo-upload" className="bg-red-200 h-10 flex justify-center items-center w-full rounded text-md font-medium text-gray-700 mb-1">Upload Photo</label>
                         <input
                             type="file"
+                            id="photo-upload"
                             name="photo"
                             accept="image/*"
                             capture="environment"
                             onChange={handleChange}
-                            className="w-full"
+                            className="hidden"
                         />
                         <p className="text-xs text-gray-500 mt-1">You can take a picture using your mobile device.</p>
+                        {/* Image Preview */}
+                        {preview && (
+                            <img
+                                src={preview}
+                                alt="Selected"
+                                className="mt-4 w-full max-h-64 object-contain border rounded"
+                            />
+                        )}
                     </div>
 
                     {/* Submit */}

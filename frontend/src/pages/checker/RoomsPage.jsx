@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import NavBarTwo from "../../components/checker/NavBarTwo";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+// import { div } from "framer-motion/client";
+import { X } from 'lucide-react';
 
 const RoomsPage = () => {
     const [data, setData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");  // To store the search query
     const [floorFilter, setFloorFilter] = useState("");  // To store the selected floor filter
+    const [modalSchedule, setModalSchedule] = useState(true);
     const navigate = useNavigate();
 
     // Filter the schedule for the current time schedule of the day
@@ -145,6 +148,29 @@ const RoomsPage = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Modal Schedule Number */}
+            {modalSchedule && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-semibold">Schedule Number</h3>
+                        </div>
+                        <div className="flex flex-row justify-around">
+                            <button
+                                onClick={() => { setModalSchedule(false) }}
+                                className="border border-black/50 p-4 rounded-2xl focus:scale-110 bg-blue-950 text-white font-bold">
+                                Schedule 1
+                            </button>
+                            <button
+                                onClick={() => { setModalSchedule(false) }}
+                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-blue-950 text-white font-bold">
+                                Schedule 2
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

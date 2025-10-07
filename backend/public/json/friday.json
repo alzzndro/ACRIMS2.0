@@ -17,13 +17,14 @@
             "id": "S11",
             "room_id": "201",
             "room_name": "201 COMPLAB",
-            "day": "Friday",
+            "day": "Tuesday",
             "schedule_number": 1,
-            "start_time": "17:30:00",
+            "start_time": "11:00:00",
             "end_time": "20:30:00",
             "subject": "INFOSE 2",
             "section": "BSIT 4th Year",
             "instructor": "Norry Frejoles",
+            "instructor_email": "jbtorres.student@asiancollege.edu.ph",
             "floor": "second"
         },
         {

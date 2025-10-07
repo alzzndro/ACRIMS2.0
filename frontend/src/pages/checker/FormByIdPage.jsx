@@ -19,40 +19,42 @@ const FormByIdPage = () => {
     // Use Effects -----------------------------------------------------------------------
     useEffect(() => {
         fetchSchedule();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [id]);
 
     useEffect(() => {
-        if (schedule) {
+        if (schedule && schedule.schedule) {
+            const { room_id, instructor, instructor_email } = schedule.schedule;
+
             setFormData((prevData) => ({
                 ...prevData,
-                room_number: schedule.schedule.room_id,
-                instructor_email: schedule.schedule?.instructor_email,
-                instructor_name: schedule.schedule.instructor
+                room_number: room_id || '',
+                instructor_email: instructor_email || '',
+                instructor_name: instructor || '',
             }));
         }
     }, [schedule]);
 
+
     // Methods ----------------------------------------------------------------------
     const fetchSchedule = async () => {
         try {
+            const token = localStorage.getItem("token");
+            const response = await axios.get(
+                `${import.meta.env.VITE_API_URL}/schedules/${id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setSchedule(response.data);
+        } catch (error1) {
             try {
-                const token = localStorage.getItem("token");
-                const response = await axios.get(
-                    `${import.meta.env.VITE_API_URL}/schedules/${id}`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setSchedule(response.data);
-            } catch {
                 const token = localStorage.getItem("token");
                 const response = await axios.get(
                     `${import.meta.env.VITE_API_URL}/schedules/json/${id}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setSchedule(response.data);
+            } catch (error2) {
+                console.log("Error fetching form:", error1, error2);
             }
-        } catch (error) {
-            console.log("Error fetching form:", error);
         }
     }
 
@@ -124,7 +126,6 @@ const FormByIdPage = () => {
             }
             navigate("/home")
         } catch (error) { // ------------------------------------------------------- CATCH
-            setLoading(true)
             invalidNotify("Added to pending form!")
             console.log("Save to local", error);
 
@@ -136,6 +137,8 @@ const FormByIdPage = () => {
 
             await localforage.setItem(`pending-${offlinePayload.id}`, offlinePayload);
             navigate("/home");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -158,7 +161,7 @@ const FormByIdPage = () => {
 
     return (
         <>
-            <NavBarTwo message={`${schedule.schedule.room_id}`} />
+            <NavBarTwo message={`${schedule.schedule?.room_id ?? ''}`} />
 
             <div className="max-w-2xl mx-auto bg-white px-5 pt-6 pb-8">
                 <form onSubmit={handleSubmit} className="space-y-4">
