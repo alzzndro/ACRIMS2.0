@@ -167,6 +167,11 @@ const RoomsPage = () => {
                                 className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-blue-950 text-white font-bold">
                                 Schedule 2
                             </button>
+                            <button
+                                onClick={() => { setModalSchedule(false) }}
+                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-blue-950 text-white font-bold">
+                                Schedule 2
+                            </button>
                         </div>
                     </div>
                 </div>
