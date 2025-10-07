@@ -21,6 +21,7 @@ import OverviewPage from './pages/admin/OverviewPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import ScheduleManagementPage from './pages/admin/ScheduleManagementPage';
+import SchedulePage from './pages/checker/SchedulePage';
 
 function usePendingResend() {
   const [isResending, setIsResending] = useState(false);
@@ -168,6 +169,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['checker']}>
               <FormByIdPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path='/schedules'
+          element={
+            <ProtectedRoute allowedRoles={['checker']}>
+              <SchedulePage />
             </ProtectedRoute>
           }
         />
