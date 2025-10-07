@@ -28,12 +28,12 @@
             "floor": "second"
         },
         {
-            "id": "S12",
+            "id": "JS12",
             "room_id": "107",
             "room_name": "107 COMPLAB",
-            "day": "Friday",
-            "schedule_number": 1,
-            "start_time": "21:30:00",
+            "day": "Tuesday",
+            "schedule_number": 2,
+            "start_time": "12:30:00",
             "end_time": "23:30:00",
             "subject": "INFOSE 2",
             "section": "BSIT 4th Year",

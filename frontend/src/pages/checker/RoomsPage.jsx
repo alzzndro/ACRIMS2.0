@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { X } from 'lucide-react';
 
 const RoomsPage = () => {
+    const [scheduleNumber, setScheduleNumber] = useState();
     const [data, setData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");  // To store the search query
     const [floorFilter, setFloorFilter] = useState("");  // To store the selected floor filter
@@ -27,11 +28,15 @@ const RoomsPage = () => {
     // Current Schedules
     const currentSchedules = data.filter(schedule => {
         const matchesDay = schedule.day === dayName && currentFormattedTime <= schedule.end_time;
+        const aboveStartTime = schedule.start_time <= currentFormattedTime;
         const matchesFloor = floorFilter ? schedule.floor === floorFilter : true;
         const matchesSearch = schedule.room_id.toLowerCase().includes(searchQuery.toLowerCase());
 
-        return matchesDay && matchesFloor && matchesSearch;
+        return matchesDay && aboveStartTime && matchesFloor && matchesSearch;
     });
+
+    // Filtered Data based on schedule number
+    const filteredSchedules = currentSchedules.filter(schedule => schedule.schedule_number === scheduleNumber);
 
     // Methods
     // fetch data
@@ -138,8 +143,8 @@ const RoomsPage = () => {
 
             {/* Body */}
             <div className="flex flex-row w-full flex-wrap gap-8 p-4 justify-evenly">
-                {currentSchedules.map((schedule, index) => (
-                    <div key={index} className="overflow-x-auto bg-blue-900 text-white shadow-xl shadow-gray-400 rounded-3xl" onClick={() => { handleIdClick(schedule.id) }}>
+                {filteredSchedules.map((schedule, index) => (
+                    <div key={index} className="overflow-x-auto bg-blue-950 text-white shadow-xl shadow-gray-400 rounded-3xl" onClick={() => { handleIdClick(schedule.id) }}>
                         <div className="w-36 aspect-square shadow-2xs p-2 rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110">
                             <h1 className="text-2xl font-bold">{schedule.room_id}</h1>
                             <p className="text-sm font-light">{convertTo12HourFormat(schedule.start_time)} - {convertTo12HourFormat(schedule.end_time)}</p>
@@ -154,22 +159,23 @@ const RoomsPage = () => {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-semibold">Schedule Number</h3>
+                            <h3 className="text-xl font-semibold">Select Schedule Number:</h3>
                         </div>
                         <div className="flex flex-row justify-around">
                             <button
-                                onClick={() => { setModalSchedule(false) }}
-                                className="border border-black/50 p-4 rounded-2xl focus:scale-110 bg-blue-950 text-white font-bold">
+                                onClick={() => {
+                                    setModalSchedule(false)
+                                    setScheduleNumber(1);
+                                }}
+                                className="border border-black/50 p-4 rounded-2xl focus:scale-110 bg-red-800 text-white font-bold">
                                 Schedule 1
                             </button>
                             <button
-                                onClick={() => { setModalSchedule(false) }}
-                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-blue-950 text-white font-bold">
-                                Schedule 2
-                            </button>
-                            <button
-                                onClick={() => { setModalSchedule(false) }}
-                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-blue-950 text-white font-bold">
+                                onClick={() => {
+                                    setModalSchedule(false)
+                                    setScheduleNumber(2);
+                                }}
+                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-red-800 text-white font-bold">
                                 Schedule 2
                             </button>
                         </div>
