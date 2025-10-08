@@ -54,6 +54,19 @@
       "floor": "first"
     },
     {
+      "id": "JS41",
+      "room_id": "107",
+      "room_name": "107 COMPLAB",
+      "day": "Wednesday",
+      "schedule_number": 1,
+      "start_time": "17:30:00",
+      "end_time": "20:30:00",
+      "subject": "SYSMAIN",
+      "section": "BSIT 241-5A",
+      "instructor": "Kent Ross Pinero",
+      "floor": "third"
+    },
+    {
       "id": "S5",
       "room_id": "308",
       "room_name": "308",

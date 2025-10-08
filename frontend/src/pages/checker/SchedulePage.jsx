@@ -11,6 +11,10 @@ export default function SchedulePage() {
 
     const navigate = useNavigate();
 
+    const handleClick = (id) => {
+        navigate(`/schedules/timetable/${id}`);
+    }
+
     const fetchData = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -90,6 +94,7 @@ export default function SchedulePage() {
                 {filteredRooms.map((room, index) => (
                     <div
                         key={index}
+                        onClick={() => { handleClick(room.room_id) }}
                         className="overflow-x-auto bg-blue-950 text-white shadow-xl shadow-gray-400 rounded-3xl"
                     >
                         <div className="w-36 aspect-square p-2 rounded-3xl flex flex-col justify-center items-center gap-1">

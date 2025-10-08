@@ -22,6 +22,7 @@ import UserManagementPage from './pages/admin/UserManagementPage';
 import ReportsPage from './pages/admin/ReportsPage';
 import ScheduleManagementPage from './pages/admin/ScheduleManagementPage';
 import SchedulePage from './pages/checker/SchedulePage';
+import ScheduleTimetablePage from './pages/checker/ScheduleTimetablePage';
 
 function usePendingResend() {
   const [isResending, setIsResending] = useState(false);
@@ -178,6 +179,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['checker']}>
               <SchedulePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path='/schedules/timetable/:id'
+          element={
+            <ProtectedRoute allowedRoles={['checker']}>
+              <ScheduleTimetablePage />
             </ProtectedRoute>
           }
         />
