@@ -47,7 +47,7 @@ const FormUpdatePage = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            alert("Form updated successfully!");
+            console.log("Form updated successfully!");
             navigate(-1);
         } catch (error) {
             console.log("Error updating form:", error);
@@ -92,10 +92,16 @@ const FormUpdatePage = () => {
                     <div className="flex flex-row gap-3">
                         <input
                             type="checkbox"
-                            checked={form.instructor_presence}
-                            onChange={(e) => setForm({ ...form, instructor_presence: e.target.checked })}
+                            checked={form.instructor_presence === 1}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    instructor_presence: e.target.checked ? 1 : 0,
+                                })
+                            }
                             className="border px-2 py-1 rounded"
                         />
+
                         <span className="text-sm text-gray-600">Please mark this <i>"checked"</i> if the instructor present.</span>
                     </div>
                 </div>
@@ -104,7 +110,7 @@ const FormUpdatePage = () => {
                     <label className="block mb-1">Remarks</label>
                     <input
                         type="text"
-                        value={form.remarks}
+                        value={form.remarks ? form.remarks : ""}
                         onChange={(e) => setForm({ ...form, remarks: e.target.value })}
                         className="border px-2 py-1 rounded w-full h-20"
                     />

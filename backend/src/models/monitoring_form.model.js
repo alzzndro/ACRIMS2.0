@@ -53,9 +53,22 @@ export async function addForm(data) {
 export async function updateForm(data, id) {
     const [result] = await db.query(
         `UPDATE monitoring_form
-        SET room_number = ?, instructor_name = ?, remarks = ?
-        WHERE form_id = ?`,
-        [data.room_number, data.instructor_name, data.remarks, id]
+         SET 
+            room_number = ?, 
+            instructor_name = ?, 
+            instructor_presence = ?, 
+            remarks = ?
+         WHERE form_id = ?`,
+        [
+            data.room_number,
+            data.instructor_name,
+            data.instructor_presence !== undefined && data.instructor_presence !== null
+                ? data.instructor_presence
+                : 0, // fallback if null
+            data.remarks,
+            id
+        ]
     );
+
     return result;
 };
