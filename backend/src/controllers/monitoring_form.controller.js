@@ -33,6 +33,7 @@ export async function addForm(req, res) {
             instructor_email,
             instructor_presence,
             remarks,
+            schedule_time,
             photo,
             checker_id
         } = req.body

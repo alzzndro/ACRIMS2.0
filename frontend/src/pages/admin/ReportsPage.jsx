@@ -79,8 +79,27 @@ export default function ReportsPage() {
         }
     }
 
+    // Convert text to upper case
+    const convertToUpper = (name) => {
+        const uppered = name.charAt(0).toUpperCase() + name.slice(1);
+        return uppered;
+    }
+
+    // Convert Time to 12-hour format
+    const to12Hour = (time24) => {
+        const [hour, minute, second] = time24.split(':');
+        const date = new Date();
+        date.setHours(hour, minute, second);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
     // Filter data based on date range
-    const filteredForms = forms.filter(form => {
+    const joinedData = forms.map(form => {
+        const user = users.find(u => u.user_id === form.checker_id);
+        return { ...form, checker_name: user ? convertToUpper(user.first_name) + " " + convertToUpper(user.last_name) : null };
+    })
+
+    const filteredForms = joinedData.filter(form => {
         const formDate = new Date(form.date_monitored);
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - parseInt(dateRange));
@@ -162,12 +181,13 @@ export default function ReportsPage() {
     const exportToCSV = () => {
         const exportData = filteredForms.map(form => ({
             Date: form.date_monitored,
-            Time: form.time_monitored,
+            Time: to12Hour(form.time_monitored),
             Room: form.room_number,
             Instructor: form.instructor_name,
+            Schedule_Time: form.schedule_time,
             Present: truthyPresence(form.instructor_presence) ? 'Yes' : 'No',
             Remarks: form.remarks || '',
-            'Checker ID': form.checker_id
+            'Checker Name': form.checker_name
         }));
 
         adminService.exportToCSV(exportData, 'acrims_report');
@@ -177,7 +197,6 @@ export default function ReportsPage() {
         // This would typically use a library like jsPDF
         alert('PDF export feature would be implemented with jsPDF library');
     };
-
 
     if (loading) {
         return <div>Loading!!!</div>

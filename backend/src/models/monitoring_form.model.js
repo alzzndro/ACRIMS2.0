@@ -39,10 +39,11 @@ export async function addForm(data) {
             instructor_name,
             instructor_presence,
             remarks,
+            schedule_time,
             photo,
             checker_id
-        ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?)`,
-            [data.room_number, data.instructor_name, data.instructor_presence, data.remarks || null, data.photo || null, data.checker_id || null]
+        ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?, ?)`,
+            [data.room_number, data.instructor_name, data.instructor_presence, data.remarks || null, data.schedule_time || null, data.photo || null, data.checker_id || null]
         );
         return result.insertId;
     } catch (error) {

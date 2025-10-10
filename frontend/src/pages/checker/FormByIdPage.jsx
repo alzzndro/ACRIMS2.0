@@ -13,8 +13,15 @@ const FormByIdPage = () => {
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState(null);
 
-
     const navigate = useNavigate();
+
+    // Convert Time to 12-hour format
+    const to12Hour = (time24) => {
+        const [hour, minute, second] = time24.split(':');
+        const date = new Date();
+        date.setHours(hour, minute, second);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
 
     // Use Effects -----------------------------------------------------------------------
     useEffect(() => {
@@ -23,13 +30,14 @@ const FormByIdPage = () => {
 
     useEffect(() => {
         if (schedule && schedule.schedule) {
-            const { room_id, instructor, instructor_email } = schedule.schedule;
+            const { room_id, instructor, instructor_email, start_time, end_time } = schedule.schedule;
 
             setFormData((prevData) => ({
                 ...prevData,
                 room_number: room_id || '',
                 instructor_email: instructor_email || '',
                 instructor_name: instructor || '',
+                schedule_time: to12Hour(start_time) + " - " + to12Hour(end_time) || '',
             }));
         }
     }, [schedule]);
@@ -65,6 +73,7 @@ const FormByIdPage = () => {
         instructor_email: '',
         instructor_presence: false,
         remarks: '',
+        schedule_time: '',
         photo: null
     });
 
