@@ -149,18 +149,8 @@ export default function AdminLayout({ children }) {
 
                                 <div className="flex gap-2">
                                     <button
-                                        className={`flex-1 py-2 px-3 rounded-lg border transition-colors text-sm flex items-center justify-center gap-2 ${isDark
-                                            ? 'border-white/10 hover:bg-white/5'
-                                            : 'border-gray-200 hover:bg-gray-50'
-                                            }`}
-                                        onClick={() => navigate('/users/me')}
-                                    >
-                                        <User size={14} />
-                                        Profile
-                                    </button>
-                                    <button
                                         onClick={handleLogout}
-                                        className="py-2 px-3 rounded-lg border border-red-500/20 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300"
+                                        className="py-2 px-3 w-full flex flex-row justify-center rounded-lg border border-red-500/20 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300"
                                         title="Logout"
                                     >
                                         <LogOut size={14} />

@@ -7,9 +7,9 @@ POST http://localhost:3000/user/register
 Content-Type: application/json
 
 {
-    "email": "notadmin@gmail.com",
-    "password": "notadmin",
-    "user_role": "checker"
+    "email": "notaadmin@gmail.com",
+    "password": "admin",
+    "user_role": "admin"
 }
 
 ### USER LOGIN

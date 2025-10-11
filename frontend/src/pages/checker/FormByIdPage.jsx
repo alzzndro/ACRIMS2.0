@@ -6,6 +6,7 @@ import NavBarTwo from "../../components/checker/NavBarTwo";
 import localforage from "localforage";
 import Loading from "../../components/common/Loading";
 import { ToastContainer, toast } from "react-toastify";
+import { to12Hour } from "../../utils/timeFormat.js";
 
 const FormByIdPage = () => {
     const { id } = useParams() // get :id from URL
@@ -14,14 +15,6 @@ const FormByIdPage = () => {
     const [preview, setPreview] = useState(null);
 
     const navigate = useNavigate();
-
-    // Convert Time to 12-hour format
-    const to12Hour = (time24) => {
-        const [hour, minute, second] = time24.split(':');
-        const date = new Date();
-        date.setHours(hour, minute, second);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
 
     // Use Effects -----------------------------------------------------------------------
     useEffect(() => {

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import useGetMe from '../../hooks/useGetMe';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
+import { toUpperName } from '../../utils/toUpperName.js';
 
 const NEON = '#00B4FF';
 const LIME = '#A8FF4A';
@@ -256,9 +257,13 @@ export default function UserManagementPage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium">
-                                                        {user.first_name.charAt(0).toUpperCase() + user.first_name.slice(1)}
+                                                        {user.first_name
+                                                            ? toUpperName(user.first_name)
+                                                            : 'Unknown'}
                                                         {' '}
-                                                        {user.last_name.charAt(0).toUpperCase() + user.last_name.slice(1)}
+                                                        {user.last_name
+                                                            ? toUpperName(user.last_name)
+                                                            : ''}
                                                     </p>
                                                     <p className="text-sm text-slate-400">ID: {user.user_id}</p>
                                                 </div>

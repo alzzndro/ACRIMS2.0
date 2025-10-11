@@ -1,16 +1,19 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import NavBarTwo from '../../components/checker/NavBarTwo'
-import axios from 'axios'
-// import { useEffect } from 'react'
-import localforage from 'localforage'
-import { ToastContainer, toast } from 'react-toastify'
-import Loading from '../../components/common/Loading'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import NavBarTwo from '../../components/checker/NavBarTwo';
+import axios from 'axios';
+// import { useEffect } from 'react';
+import localforage from 'localforage';
+import { ToastContainer, toast } from 'react-toastify';
+import Loading from '../../components/common/Loading';
+import { to12HourV2 } from '../../utils/timeFormat.js';
 
 const FormPage = () => {
     // Loading
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState(null);
+    const [startTime, setStartTime] = useState(null);
+    const [endTime, setEndTime] = useState(null);
 
     // Toast
     const invalidNotify = () => {
@@ -36,6 +39,7 @@ const FormPage = () => {
         instructor_email: '',
         instructor_presence: false,
         remarks: '',
+        schedule_time: '',
         photo: null,
     });
 
@@ -67,10 +71,17 @@ const FormPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const combinedSchedule = `${to12HourV2(startTime)} - ${to12HourV2(endTime)}`;
+
+        const updatedFormData = {
+            ...formData,
+            schedule_time: combinedSchedule,
+        }
+
         const token = localStorage.getItem("token");
 
         const payload = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
+        Object.entries(updatedFormData).forEach(([key, value]) => {
             if (value !== null) payload.append(key, value)
         });
 
@@ -108,19 +119,6 @@ const FormPage = () => {
         }
     }
 
-
-    // for debugging local forage
-    // const getKeys = async () => {
-    //     const keys = await localforage.keys()
-
-    //     for (const key of keys) {
-    //         if (key.startsWith("pending-")) {
-    //             const form = await localforage.getItem(key)
-    //             console.log("keys: ", form)
-    //         }
-    //     }
-    // }
-
     if (loading) {
         return <Loading />
     }
@@ -153,6 +151,7 @@ const FormPage = () => {
                             value={formData.instructor_name}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded"
+                            required
                         />
                     </div>
 
@@ -167,6 +166,30 @@ const FormPage = () => {
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded"
                         />
+                    </div>
+
+                    {/* Schedule Time */}
+                    <div className='flex flex-row gap-4'>
+                        <div className='w-1/2'>
+                            <label className="block text-md font-medium text-gray-700 mb-1">Start Time</label>
+                            <input
+                                type="time"
+                                name="start_time"
+                                value={startTime || ''}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                className="w-full px-3 py-2 border rounded"
+                            />
+                        </div>
+                        <div className='w-1/2'>
+                            <label className="block text-md font-medium text-gray-700 mb-1">End Time</label>
+                            <input
+                                type="time"
+                                name="end_time"
+                                value={endTime || ''}
+                                onChange={(e) => setEndTime(e.target.value)}
+                                className="w-full px-3 py-2 border rounded"
+                            />
+                        </div>
                     </div>
 
                     {/* Instructor Presence */}

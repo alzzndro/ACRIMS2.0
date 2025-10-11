@@ -1,9 +1,9 @@
-import localforage from "localforage"
-import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import localforage from "localforage";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Logout = () => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const deleteCached = async () => {
         // localforage
@@ -11,21 +11,22 @@ const Logout = () => {
         for (const key of keys) {
             if (key.startsWith("pending-")) {
                 try {
-                    await localforage.removeItem(key)
+                    await localforage.removeItem(key);
                 } catch (error) {
-                    console.log("Cannot delete cached forms. ", error)
+                    console.log("Cannot delete cached forms. ", error);
                 }
             }
         }
     }
 
     useEffect(() => {
-        localStorage.removeItem("token")
-        deleteCached()
-        navigate("/", { replace: true })
-    }, [navigate])
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        deleteCached();
+        navigate("/", { replace: true });
+    }, [navigate]);
 
-    return null
+    return null;
 }
 
-export default Logout
+export default Logout;

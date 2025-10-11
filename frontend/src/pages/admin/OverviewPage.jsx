@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 // import useGetMe from '../../hooks/useGetMe';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
+import Loading from '../../components/common/Loading';
 
 const NEON = '#00B4FF';
 const LIME = '#A8FF4A';
@@ -130,7 +131,7 @@ export default function OverviewPage() {
     }));
 
     if (loading) {
-        return <div>Loading!!!</div>
+        return <Loading />
     }
 
     if (error) return <div>Error!!</div>

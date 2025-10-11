@@ -13,6 +13,9 @@ import { useNavigate } from 'react-router-dom';
 // import useGetMe from '../../hooks/useGetMe';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
+import { to12Hour } from '../../utils/timeFormat.js';
+import { toUpperName } from '../../utils/toUpperName.js';
+import Loading from '../../components/common/Loading.jsx';
 
 const NEON = '#00B4FF';
 const LIME = '#A8FF4A';
@@ -79,24 +82,10 @@ export default function ReportsPage() {
         }
     }
 
-    // Convert text to upper case
-    const convertToUpper = (name) => {
-        const uppered = name.charAt(0).toUpperCase() + name.slice(1);
-        return uppered;
-    }
-
-    // Convert Time to 12-hour format
-    const to12Hour = (time24) => {
-        const [hour, minute, second] = time24.split(':');
-        const date = new Date();
-        date.setHours(hour, minute, second);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
     // Filter data based on date range
     const joinedData = forms.map(form => {
         const user = users.find(u => u.user_id === form.checker_id);
-        return { ...form, checker_name: user ? convertToUpper(user.first_name) + " " + convertToUpper(user.last_name) : null };
+        return { ...form, checker_name: user ? toUpperName(user.first_name) + " " + toUpperName(user.last_name) : null };
     })
 
     const filteredForms = joinedData.filter(form => {
@@ -193,13 +182,8 @@ export default function ReportsPage() {
         adminService.exportToCSV(exportData, 'acrims_report');
     };
 
-    const exportToPDF = () => {
-        // This would typically use a library like jsPDF
-        alert('PDF export feature would be implemented with jsPDF library');
-    };
-
     if (loading) {
-        return <div>Loading!!!</div>
+        return <Loading />
     }
 
     if (error) return <div>Error!!</div>
@@ -218,17 +202,10 @@ export default function ReportsPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={exportToCSV}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl glass hover:bg-white/5 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-900/20 bg-white hover:bg-amber-300 cursor-pointer"
                     >
                         <Download size={20} />
                         Export CSV
-                    </button>
-                    <button
-                        onClick={exportToPDF}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
-                    >
-                        <FileText size={20} />
-                        Export PDF
                     </button>
                 </div>
             </div>
@@ -479,12 +456,12 @@ export default function ReportsPage() {
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-slate-800/50">
+                            <thead className="bg-slate-800">
                                 <tr>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Room</th>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Total</th>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Present</th>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Rate</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Room</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Total</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Present</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Rate</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -523,12 +500,12 @@ export default function ReportsPage() {
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-slate-800/50">
+                            <thead className="bg-slate-800">
                                 <tr>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Checker</th>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Checks</th>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Present</th>
-                                    <th className="text-left p-4 text-sm font-medium text-slate-400">Rate</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Checker</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Checks</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Present</th>
+                                    <th className="text-left p-4 text-sm font-medium text-white">Rate</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">

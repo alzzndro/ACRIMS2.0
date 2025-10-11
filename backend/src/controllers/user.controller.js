@@ -1,6 +1,7 @@
 import * as service from '../services/users.services.js';
 import jwt from 'jsonwebtoken';
 import { customAlphabet } from 'nanoid';
+import bcrypt from 'bcrypt';
 
 // GET ALL USER -------------------------------------------------------------------------------------------
 export async function getAllUsers(req, res) {
@@ -15,25 +16,27 @@ export async function getAllUsers(req, res) {
 
 // ADD USER -------------------------------------------------------------------------------------------
 export async function addUser(req, res) {
+    const saltRounds = 10;
     try {
-        const { email, first_name, last_name, password, user_role } = req.body
-
-        const uid = customAlphabet('1234567890', 6);
-
-        const user_id = uid();
-
-        console.log(user_id);
+        const { email, first_name, last_name, password, user_role } = req.body // inputs from the client through req.body
 
         // check if input contains no value
         if (!email || !password || !user_role) {
             return res.status(400).send("Bad Request! No value or lacks value! ");
-        } else {
-            await service.addUser({ user_id, email, password, first_name, last_name, user_role });
-            res.status(201).send("User added successfully!");
         }
 
+        // Hashed password
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Unique ID
+        const uid = customAlphabet('1234567890', 6);
+        const user_id = uid();
+
+        await service.addUser({ user_id, email, password: hashedPassword, first_name, last_name, user_role });
+        res.status(201).send("User added successfully!");
+
     } catch (error) {
-        console.error("Something went sideways: ", error);
+        console.error("Trouble in adding a user: ", error);
         res.status(500).json({ error: "Internal server error" })
         throw error;
     }
@@ -43,13 +46,14 @@ export async function addUser(req, res) {
 // LOGIN USER -------------------------------------------------------------------------------------------
 export async function loginUser(req, res) {
     try {
-        const { email, password } = req.body
+        const { email, password } = req.body // inputs from the client
 
         // if input contains no values
         if (!email || !password) {
             return res.status(400).json({ success: false, message: 'Email and password are required' });
         }
 
+        // fetching the credentials of the user
         const result = await service.loginUser({ email })
 
         // if email not exist
@@ -57,11 +61,13 @@ export async function loginUser(req, res) {
             return res.status(401).json({ email: false })
         }
 
-        const user = result[0]
+        const user = result?.[0];
 
         // compare password to user's password
-        if (password !== user.password) {
-            return res.status(401).json({ password: false })
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({ password: false, success: false })
         }
 
         const token = jwt.sign({ id: user.user_id, email: user.email, role: user.user_role }, process.env.JWT_SECRET_KEY, { expiresIn: '24h' })
@@ -69,12 +75,12 @@ export async function loginUser(req, res) {
         // successful
         return res.status(200).json({
             success: true,
-            message: `${user.user_id} logged in successfully!`,
+            message: `${user.first_name}: Logged in successfully!`,
             token: token,
             user: {
                 id: user.user_id,
                 role: user.user_role,
-                name: user.first_name,
+                name: user.first_name + ' ' + user.last_name,
                 email: user.email,
             }
         })

@@ -52,31 +52,43 @@ const LoginPage = () => {
             // destructure from data
             const { success, message, token, user } = data;
 
-            if (success) {
-                console.log(message);
-                console.log(user.role);
+            if (!success) {
+                invalidNotify();
+                return;
             }
+
+            console.log(message);
+
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
 
             if (user.role === "admin") {
-                localStorage.setItem('token', token)
-                navigate('/admin/dashboard')
-            }
-
-            if (user.role === "checker") {
-                localStorage.setItem('token', token)
-                navigate('/home')
+                navigate('/admin/dashboard');
+            } else if (user.role === "checker") {
+                navigate('/home');
+            } else {
+                invalidNotify();
+                return;
             }
         } catch (error) {
             console.log(error);
-            invalidNotify()
+            invalidNotify();
         }
     };
 
     useEffect(() => {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
+        const user = localStorage.getItem("user");
+        const parsedUser = JSON.parse(user);
 
-        if (token) {
-            navigate("/home")
+        if (token && user) {
+            if (parsedUser.role === "admin") {
+                navigate('/admin/dashboard');
+            } else if (parsedUser.role === "checker") {
+                navigate('/home');
+            } else {
+                return;
+            }
         }
     }, [navigate])
 

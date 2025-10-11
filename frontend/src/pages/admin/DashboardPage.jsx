@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 // import useGetMe from '../../hooks/useGetMe';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
+import { to12Hour } from '../../utils/timeFormat.js'
 
 const NEON = '#00B4FF';
 const LIME = '#A8FF4A';
@@ -163,7 +164,7 @@ export default function DashboardPage() {
                                 <div className="text-xs text-slate-400">Today</div>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-3 h-96 overflow-y-scroll">
                                 {loading && <div className="text-sm text-slate-400">Loading…</div>}
                                 {forms.slice(-6).reverse().map(f => (
                                     <div key={f.form_id} className="flex items-start gap-3">
@@ -255,7 +256,7 @@ export default function DashboardPage() {
                                 <div className="text-xs text-slate-400">{filtered.length} items</div>
                             </div>
 
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto overflow-scroll h-96">
                                 <table className="w-full text-left text-sm">
                                     <thead className="text-slate-400">
                                         <tr>
@@ -273,7 +274,7 @@ export default function DashboardPage() {
                                             <tr key={f.form_id} className="hover:bg-white/2 transition-colors">
                                                 <td className="py-3">{f.form_id}</td>
                                                 <td className="py-3">{f.date_monitored}</td>
-                                                <td className="py-3">{f.time_monitored}</td>
+                                                <td className="py-3">{to12Hour(f.time_monitored)}</td>
                                                 <td className="py-3">{f.room_number}</td>
                                                 <td className="py-3">{f.instructor_name}</td>
                                                 <td className="py-3">{truthyPresence(f.instructor_presence) ? 'Present' : 'Absent'}</td>
