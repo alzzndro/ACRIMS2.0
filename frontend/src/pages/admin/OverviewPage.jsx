@@ -147,7 +147,7 @@ export default function OverviewPage() {
                         </h1>
                         <p className="text-slate-400 mt-2">Comprehensive monitoring dashboard and analytics</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="hidden items-center gap-3">
                         <button className="px-4 py-2 rounded-xl glass hover:bg-white/5 transition-colors">
                             Export Report
                         </button>

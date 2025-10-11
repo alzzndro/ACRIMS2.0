@@ -109,7 +109,7 @@ export default function DashboardPage() {
                             </h1>
                             <p className="text-slate-400 mt-2">Real-time monitoring and form management</p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="items-center gap-3 hidden">
                             <div className="relative">
                                 <input
                                     value={query}
@@ -171,7 +171,7 @@ export default function DashboardPage() {
                                         <div className="w-10 h-10 rounded-lg flex items-center justify-center glass">{f.room_number}</div>
                                         <div className="flex-1">
                                             <div className="text-sm font-medium">{f.instructor_name || 'Unknown'}</div>
-                                            <div className="text-xs text-slate-400">{f.remarks || '—'} · {f.time_monitored || ''}</div>
+                                            <div className="text-xs text-slate-400">{f.remarks ? f.remarks.slice(0, 5) + '...' : '—'} · {f.time_monitored || ''}</div>
                                         </div>
                                         <div className={`text-xs px-2 py-1 rounded-md ${truthyPresence(f.instructor_presence) ? 'bg-[#00ff7a20] text-black' : 'bg-[#ff4d6d20] text-pink-300'}`}>
                                             {truthyPresence(f.instructor_presence) ? 'Present' : 'Absent'}
@@ -278,7 +278,7 @@ export default function DashboardPage() {
                                                 <td className="py-3">{f.room_number}</td>
                                                 <td className="py-3">{f.instructor_name}</td>
                                                 <td className="py-3">{truthyPresence(f.instructor_presence) ? 'Present' : 'Absent'}</td>
-                                                <td className="py-3">{f.remarks || '—'}</td>
+                                                <td className="py-3">{f.remarks ? f.remarks.slice(0, 5) + '...' : '—'}</td>
                                             </tr>
                                         ))}
                                     </tbody>

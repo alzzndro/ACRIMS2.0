@@ -36,6 +36,8 @@ export default function UserManagementPage() {
         user_role: 'checker'
     });
 
+    const [confirmPassword, setConfirmPassword] = useState(null);
+
     useEffect(() => {
         fetchUsers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,6 +86,12 @@ export default function UserManagementPage() {
     async function handleAddUser() {
         if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.password) {
             alert('Please fill in all fields');
+            return;
+        }
+
+        if (newUser.password !== confirmPassword) {
+            alert("Password do not match!!");
+            setConfirmPassword("");
             return;
         }
 
@@ -157,7 +165,7 @@ export default function UserManagementPage() {
 
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-amber-900/20 hover:bg-amber-300 text-black font-semibold hover:opacity-90 transition-opacity"
                 >
                     <Plus size={20} />
                     Add User
@@ -333,7 +341,7 @@ export default function UserManagementPage() {
                             <h3 className="text-xl font-semibold">Add New User</h3>
                             <button
                                 onClick={() => setShowAddModal(false)}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                className="p-2 hover:bg-amber-300 rounded-lg transition-colors"
                             >
                                 <X size={20} />
                             </button>
@@ -382,6 +390,16 @@ export default function UserManagementPage() {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-medium text-slate-400 mb-2">Confirm Password</label>
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-2">Role</label>
                                 <select
                                     value={newUser.user_role}
@@ -397,13 +415,13 @@ export default function UserManagementPage() {
                         <div className="flex gap-3 mt-6">
                             <button
                                 onClick={() => setShowAddModal(false)}
-                                className="flex-1 px-4 py-2 rounded-lg border border-white/20 hover:bg-white/5 transition-colors"
+                                className="flex-1 px-4 py-2 rounded-lg border border-amber-900/20 hover:bg-red-400 hover:text-white"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleAddUser}
-                                className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
+                                className="flex-1 px-4 py-2 rounded-lg text-black font-semibold hover:opacity-90 border border-amber-900/20 hover:bg-green-400 hover:text-white transition-opacity"
                             >
                                 Add User
                             </button>
