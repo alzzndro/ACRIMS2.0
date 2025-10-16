@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 // import { div } from "framer-motion/client";
 import { X } from 'lucide-react';
+import { IoArrowBack } from 'react-icons/io5';
 
 const RoomsPage = () => {
     const [scheduleNumber, setScheduleNumber] = useState();
@@ -36,9 +37,21 @@ const RoomsPage = () => {
     });
 
     // Filtered Data based on schedule number
-    const filteredSchedules = currentSchedules.filter(schedule => schedule.schedule_number === scheduleNumber);
+    const filteredSchedules = currentSchedules.filter(schedule => {
+
+        if (scheduleNumber === 3) {
+            return schedule;
+        }
+        const numberMatches = schedule.schedule_number === scheduleNumber;
+
+        return numberMatches;
+    });
 
     // Methods
+    const handleBackArrow = () => {
+        navigate(-1);
+    }
+
     // fetch data
     const fetchData = async () => {
         try {
@@ -146,9 +159,9 @@ const RoomsPage = () => {
                 {filteredSchedules.map((schedule, index) => (
                     <div key={index} className="overflow-x-auto bg-blue-950 text-white shadow-xl shadow-gray-400 rounded-3xl" onClick={() => { handleIdClick(schedule.id) }}>
                         <div className="w-36 aspect-square shadow-2xs p-2 rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110">
-                            <h1 className="text-2xl font-bold">{schedule.room_id}</h1>
+                            <h1 className="text-2xl font-bold">{schedule.room_id.replace(/\s*\(.*?\)/g, '')}</h1>
                             <p className="text-sm font-light">{convertTo12HourFormat(schedule.start_time)} - {convertTo12HourFormat(schedule.end_time)}</p>
-                            <p>{schedule.instructor}</p>
+                            <p>{schedule.instructor.slice(0, 11) + '...'}</p>
                         </div>
                     </div>
                 ))}
@@ -158,10 +171,11 @@ const RoomsPage = () => {
             {modalSchedule && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-semibold">Select Schedule Number:</h3>
+                        <div className="flex flex-row items-center justify-start mb-6">
+                            <button onClick={handleBackArrow} className='h-full w-12 flex justify-center items-center rounded-4xl focus:bg-gray-200 focus:text-red-500 text-red-400'><IoArrowBack size={30} /></button>
+                            <h3 className="text-lg font-semibold">Select Schedule Number</h3>
                         </div>
-                        <div className="flex flex-row justify-around">
+                        <div className="flex flex-row justify-around flex-wrap gap-4">
                             <button
                                 onClick={() => {
                                     setModalSchedule(false)
@@ -177,6 +191,14 @@ const RoomsPage = () => {
                                 }}
                                 className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-red-800 text-white font-bold">
                                 Schedule 2
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setModalSchedule(false)
+                                    setScheduleNumber(3);
+                                }}
+                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-blue-800 text-white font-bold">
+                                All Schedules
                             </button>
                         </div>
                     </div>

@@ -175,6 +175,7 @@ export default function ReportsPage() {
             Instructor: form.instructor_name,
             Schedule_Time: form.schedule_time,
             Present: truthyPresence(form.instructor_presence) ? 'Yes' : 'No',
+            Late: truthyPresence(form.is_late) ? 'Yes' : 'No',
             Remarks: form.remarks || '',
             'Checker Name': form.checker_name
         }));

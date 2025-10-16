@@ -2,20 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBarTwo from '../../components/checker/NavBarTwo';
 import axios from 'axios';
-// import { useEffect } from 'react';
 import localforage from 'localforage';
 import { ToastContainer, toast } from 'react-toastify';
 import Loading from '../../components/common/Loading';
 import { to12HourV2 } from '../../utils/timeFormat.js';
 
 const FormPage = () => {
-    // Loading
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState(null);
     const [startTime, setStartTime] = useState(null);
     const [endTime, setEndTime] = useState(null);
 
-    // Toast
     const invalidNotify = () => {
         toast.error("sd", {
             position: "top-center",
@@ -27,17 +24,16 @@ const FormPage = () => {
             progress: undefined,
             theme: "light",
         });
-    }
+    };
 
-    // Navigate
     const navigate = useNavigate();
 
-    // Form Data Template
     const [formData, setFormData] = useState({
         room_number: '',
         instructor_name: '',
         instructor_email: '',
         instructor_presence: false,
+        is_late: false,
         remarks: '',
         schedule_time: '',
         photo: null,
@@ -54,10 +50,9 @@ const FormPage = () => {
                 [name]: file,
             }));
 
-            // Create image preview
             const reader = new FileReader();
             reader.onloadend = () => {
-                setPreview(reader.result); // Base64 string
+                setPreview(reader.result);
             };
             reader.readAsDataURL(file);
         } else {
@@ -66,7 +61,7 @@ const FormPage = () => {
                 [name]: type === 'checkbox' ? checked : value,
             }));
         }
-    }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -75,40 +70,41 @@ const FormPage = () => {
 
         const updatedFormData = {
             ...formData,
+            room_number: 'Room' + ' ' + formData.room_number,
             schedule_time: combinedSchedule,
-        }
+        };
 
         const token = localStorage.getItem("token");
 
         const payload = new FormData();
         Object.entries(updatedFormData).forEach(([key, value]) => {
-            if (value !== null) payload.append(key, value)
+            if (value !== null) payload.append(key, value);
         });
 
-        try { // ------------------------------------------------------- TRY
-            setLoading(true)
+        try {
+            setLoading(true);
 
             const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/form/add`, payload, {
                 headers: {
                     Authorization: `Bearer ${token}`,
-                }
+                },
             });
 
             const { success, message } = data;
 
             if (success) {
                 console.log(message);
-                invalidNotify()
+                invalidNotify();
             } else {
-                invalidNotify()
+                invalidNotify();
                 console.error("Adding failed:", message);
             }
-            navigate("/home")
-        } catch (error) { // ------------------------------------------------------- CATCH
-            setLoading(true)
+
+            navigate("/home");
+        } catch (error) {
+            setLoading(true);
             console.log("Save to local", error);
 
-            // save to local
             const offlinePayload = {
                 id: Date.now(),
                 formData,
@@ -117,10 +113,10 @@ const FormPage = () => {
             await localforage.setItem(`pending-${offlinePayload.id}`, offlinePayload);
             navigate("/home");
         }
-    }
+    };
 
     if (loading) {
-        return <Loading />
+        return <Loading />;
     }
 
     return (
@@ -203,7 +199,29 @@ const FormPage = () => {
                                 onChange={handleChange}
                                 className="mr-2"
                             />
-                            <span className="text-sm text-gray-600">Please mark this <i>"checked"</i> if the instructor present.</span>
+                            <span className="text-sm text-gray-600">Check this if the instructor is present.</span>
+                        </div>
+                    </div>
+
+                    {/* Late Presence (is_late) */}
+                    <div className="">
+                        <label className="block text-md font-medium text-gray-700">Instructor Lateness</label>
+                        <div className="flex flex-row gap-3">
+                            <input
+                                type="checkbox"
+                                name="is_late"
+                                checked={formData.is_late}
+                                onChange={handleChange}
+                                disabled={!formData.instructor_presence}
+                                className="mr-2"
+                            />
+                            <span className="text-sm text-gray-600">
+                                Check this if the instructor was late.
+                                <br />
+                                <span className={formData.instructor_presence ? "text-green-600" : "text-red-500"}>
+                                    {formData.instructor_presence ? '' : 'Only available when instructor is present.'}
+                                </span>
+                            </span>
                         </div>
                     </div>
 
@@ -221,7 +239,9 @@ const FormPage = () => {
 
                     {/* Photo Upload / Camera */}
                     <div className="">
-                        <label htmlFor="photo-upload" className="bg-red-200 h-10 flex justify-center items-center w-full rounded text-md font-medium text-gray-700 mb-1">Upload Photo</label>
+                        <label htmlFor="photo-upload" className="bg-red-200 h-10 flex justify-center items-center w-full rounded text-md font-medium text-gray-700 mb-1">
+                            Upload Photo
+                        </label>
                         <input
                             type="file"
                             id="photo-upload"
@@ -232,7 +252,6 @@ const FormPage = () => {
                             className="hidden"
                         />
                         <p className="text-xs text-gray-500 mt-1">You can take a picture using your mobile device.</p>
-                        {/* Image Preview */}
                         {preview && (
                             <img
                                 src={preview}
@@ -253,7 +272,7 @@ const FormPage = () => {
                     </div>
                 </form>
             </div>
-            {/* Toast Container */}
+
             <ToastContainer
                 position="top-center"
                 autoClose={5000}

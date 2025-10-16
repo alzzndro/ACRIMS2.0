@@ -14,20 +14,6 @@
       "floor": "second"
     },
     {
-      "id": "JS1",
-      "room_id": "104",
-      "room_name": "104 COMPLAB",
-      "day": "Thursday",
-      "schedule_number": 1,
-      "start_time": "10:00:00",
-      "end_time": "12:00:00",
-      "subject": "Nors",
-      "section": "BSIT 251-4A",
-      "instructor": "Alessandro",
-      "instructor_email": "jbtorres.student@asiancollege.edu.ph",
-      "floor": "second"
-    },
-    {
       "id": "S2",
       "room_id": "204",
       "room_name": "RM 204 PHY LAB",
@@ -1355,11 +1341,11 @@
     },
     {
       "id": "S103",
-      "room_id": "319",
+      "room_id": "Room 319",
       "room_name": "RM 319 MOCK BAR [10m X 5.10m] 51 sq",
-      "day": "Friday",
-      "schedule_number": 1,
-      "start_time": "09:00:00",
+      "day": "Thursday",
+      "schedule_number": 2,
+      "start_time": "08:30:00",
       "end_time": "12:00:00",
       "subject": "PHILGTR",
       "section": "DHT - 3A",
@@ -1381,12 +1367,12 @@
     },
     {
       "id": "S104",
-      "room_id": "319",
+      "room_id": "Room 319",
       "room_name": "RM 319 MOCK BAR [10m X 5.10m] 51 sq",
-      "day": "Friday",
+      "day": "Thursday",
       "schedule_number": 1,
-      "start_time": "19:30:00",
-      "end_time": "20:30:00",
+      "start_time": "08:30:00",
+      "end_time": "09:30:00",
       "subject": "COMPRE01",
       "section": "DHT-2B",
       "instructor": "PASTOR",
@@ -1433,16 +1419,16 @@
     },
     {
       "id": "S109",
-      "room_id": "ANNEX 1",
-      "room_name": "ANNEX 1",
-      "day": "Friday",
+      "room_id": "Room 204",
+      "room_name": "Room 204",
+      "day": "Thursday",
       "schedule_number": 1,
-      "start_time": "17:30:00",
-      "end_time": "19:30:00",
-      "subject": "PE 3",
-      "section": "DHT - 2F",
-      "instructor": "CULI",
-      "floor": null
+      "start_time": "08:00:00",
+      "end_time": "11:00:00",
+      "subject": "OBJPROG 1",
+      "section": "BSIT 231-2",
+      "instructor": "Christian Dela Cruz",
+      "floor": "second"
     }
   ]
 }

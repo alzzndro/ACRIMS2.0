@@ -3,16 +3,15 @@ import {
     AreaChart, Area, ResponsiveContainer, PieChart, Pie, Cell, Tooltip,
     BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
-import { Bell, Search, Home, FileText, Users, BarChart2, Settings } from 'lucide-react';
-// import axios from 'axios';
+import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import useGetMe from '../../hooks/useGetMe';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
 import { to12Hour } from '../../utils/timeFormat.js'
 
 const NEON = '#00B4FF';
 const LIME = '#A8FF4A';
+const RED = '#FF0000';
 
 function truthyPresence(v) {
     return ["1", 1, true, "true"].includes(v) || v === 1;
@@ -33,13 +32,10 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [query, setQuery] = useState('');
-    // const { user } = useGetMe();
-
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchForms();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     async function fetchForms() {
@@ -63,17 +59,28 @@ export default function DashboardPage() {
     // Derived analytics
     const total = forms.length;
     const presentCount = forms.filter(f => truthyPresence(f.instructor_presence)).length;
+    const lateCount = forms.filter(f => truthyPresence(f.is_late)).length;
+    const presentNonLate = presentCount - lateCount;
+    const absentCount = total - presentCount;
+
     const presentPct = total ? Math.round((presentCount / total) * 100) : 0;
 
-    // Top rooms
+    const distribution = [
+        { name: 'Present', value: presentNonLate },
+        { name: 'Late', value: lateCount },
+        { name: 'Absent', value: absentCount }
+    ];
+
     const roomCounts = forms.reduce((acc, f) => {
         const rn = f.room_number || '—';
         acc[rn] = (acc[rn] || 0) + 1;
         return acc;
     }, {});
-    const topRooms = Object.entries(roomCounts).map(([room, checks]) => ({ room, checks })).sort((a, b) => b.checks - a.checks).slice(0, 6);
+    const topRooms = Object.entries(roomCounts)
+        .map(([room, checks]) => ({ room, checks }))
+        .sort((a, b) => b.checks - a.checks)
+        .slice(0, 6);
 
-    // Last 7 days visitors
     const last7 = lastNDates(7);
     const visitors = last7.map(date => {
         const count = forms.filter(f => f.date_monitored === date).length;
@@ -82,25 +89,17 @@ export default function DashboardPage() {
         return { name: short, uv: count };
     });
 
-    // Presence distribution
-    const distribution = [
-        { name: 'Present', value: presentCount },
-        { name: 'Absent', value: total - presentCount }
-    ];
-
     const filtered = forms.filter(f =>
         (f.room_number || '').toLowerCase().includes(query.toLowerCase()) ||
         (f.instructor_name || '').toLowerCase().includes(query.toLowerCase())
     );
 
-    if (error) {
-        return <h1>Error..</h1>
-    }
+    if (error) return <h1>Error...</h1>;
 
     return (
         <AdminLayout>
             <div>
-                {/* Page Header */}
+                {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between">
                         <div>
@@ -123,11 +122,9 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* GRID TILES */}
                 <div className="grid grid-cols-12 gap-6">
-                    {/* Left column */}
+                    {/* Left Column */}
                     <section className="col-span-12 lg:col-span-4 space-y-6">
-                        {/* Profile / stats */}
                         <div className="p-5 rounded-2xl glass">
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-xl" style={{ background: `linear-gradient(135deg, ${NEON}, ${LIME})` }}></div>
@@ -157,7 +154,7 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* Recent activity */}
+                        {/* Recent Activity */}
                         <div className="p-4 rounded-2xl glass">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="text-sm font-semibold">Recent Activity</div>
@@ -168,13 +165,22 @@ export default function DashboardPage() {
                                 {loading && <div className="text-sm text-slate-400">Loading…</div>}
                                 {forms.slice(-6).reverse().map(f => (
                                     <div key={f.form_id} className="flex items-start gap-3">
-                                        <div className="w-10 h-10 rounded-lg flex items-center justify-center glass">{f.room_number}</div>
+                                        <div className="w-10 h-10 rounded-lg flex items-center justify-center glass text-xs overflow-hidden">{f.room_number}</div>
                                         <div className="flex-1">
                                             <div className="text-sm font-medium">{f.instructor_name || 'Unknown'}</div>
                                             <div className="text-xs text-slate-400">{f.remarks ? f.remarks.slice(0, 5) + '...' : '—'} · {f.time_monitored || ''}</div>
                                         </div>
-                                        <div className={`text-xs px-2 py-1 rounded-md ${truthyPresence(f.instructor_presence) ? 'bg-[#00ff7a20] text-black' : 'bg-[#ff4d6d20] text-pink-300'}`}>
-                                            {truthyPresence(f.instructor_presence) ? 'Present' : 'Absent'}
+                                        <div className={`text-xs px-2 py-1 rounded-md ${!truthyPresence(f.instructor_presence)
+                                            ? 'bg-[#ff4d6d20] text-pink-300'
+                                            : truthyPresence(f.is_late)
+                                                ? 'bg-[#00B4FF20] text-sky-400'
+                                                : 'bg-[#00ff7a20] text-black'
+                                            }`}>
+                                            {!truthyPresence(f.instructor_presence)
+                                                ? 'Absent'
+                                                : truthyPresence(f.is_late)
+                                                    ? 'Late'
+                                                    : 'Present'}
                                         </div>
                                     </div>
                                 ))}
@@ -183,9 +189,9 @@ export default function DashboardPage() {
                         </div>
                     </section>
 
-                    {/* Right column */}
+                    {/* Right Column */}
                     <section className="col-span-12 lg:col-span-8 space-y-6">
-                        {/* Analytics */}
+                        {/* Attendance Chart */}
                         <div className="p-5 rounded-2xl glass">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
@@ -214,26 +220,33 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
+                        {/* Distribution + Top Rooms */}
                         <div className="grid grid-cols-12 gap-6">
+                            {/* Pie Chart */}
                             <div className="col-span-12 md:col-span-4 p-4 rounded-2xl glass">
                                 <div className="text-sm font-semibold mb-3">Presence Distribution</div>
                                 <div style={{ height: 160 }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie data={distribution} dataKey="value" innerRadius={36} outerRadius={60} paddingAngle={3}>
-                                                {distribution.map((entry, i) => <Cell key={i} fill={i === 0 ? NEON : LIME} />)}
+                                                {distribution.map((entry, i) => {
+                                                    const color = entry.name === 'Present' ? LIME : entry.name === 'Late' ? NEON : RED;
+                                                    return <Cell key={i} fill={color} />;
+                                                })}
                                             </Pie>
                                             <Tooltip />
                                         </PieChart>
                                     </ResponsiveContainer>
 
                                     <div className="mt-3 text-xs text-slate-400 flex justify-between">
-                                        <div><span style={{ color: NEON }} className="font-semibold">●</span> Present</div>
-                                        <div><span style={{ color: LIME }} className="font-semibold">●</span> Absent</div>
+                                        <div><span style={{ color: LIME }} className="font-semibold">●</span> Present</div>
+                                        <div><span style={{ color: NEON }} className="font-semibold">●</span> Late</div>
+                                        <div><span style={{ color: RED }} className="font-semibold">●</span> Absent</div>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Top Rooms */}
                             <div className="col-span-12 md:col-span-8 p-4 rounded-2xl glass">
                                 <div className="text-sm font-semibold mb-3">Top Rooms by Checks</div>
                                 <div style={{ height: 160 }}>
@@ -277,7 +290,11 @@ export default function DashboardPage() {
                                                 <td className="py-3">{to12Hour(f.time_monitored)}</td>
                                                 <td className="py-3">{f.room_number}</td>
                                                 <td className="py-3">{f.instructor_name}</td>
-                                                <td className="py-3">{truthyPresence(f.instructor_presence) ? 'Present' : 'Absent'}</td>
+                                                <td className="py-3">
+                                                    {truthyPresence(f.instructor_presence)
+                                                        ? truthyPresence(f.is_late) ? 'Late' : 'Present'
+                                                        : 'Absent'}
+                                                </td>
                                                 <td className="py-3">{f.remarks ? f.remarks.slice(0, 5) + '...' : '—'}</td>
                                             </tr>
                                         ))}
@@ -292,4 +309,3 @@ export default function DashboardPage() {
         </AdminLayout>
     );
 }
-

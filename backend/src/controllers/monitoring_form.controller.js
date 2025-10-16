@@ -32,19 +32,22 @@ export async function addForm(req, res) {
             instructor_name,
             instructor_email,
             instructor_presence,
+            is_late,
             remarks,
             schedule_time,
             photo,
             checker_id
         } = req.body
 
-        const isPresent = instructor_presence === "1" || instructor_presence === "true"
+        const isPresent = instructor_presence === "1" || instructor_presence === "true";
+        // const isLate = is_late === "1" || is_late === "true";
 
         const photoPath = req.file ? `/uploads/${req.file.filename}` : null;
 
         await service.addForm({
             ...req.body,
             instructor_presence: req.body.instructor_presence === "true" ? 1 : 0,
+            is_late: req.body.is_late === "true" ? 1 : 0,
             photo: photoPath,
             checker_id: req.user.id,
         })

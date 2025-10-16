@@ -38,12 +38,13 @@ export async function addForm(data) {
             room_number,
             instructor_name,
             instructor_presence,
+            is_late,
             remarks,
             schedule_time,
             photo,
             checker_id
-        ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?, ?)`,
-            [data.room_number, data.instructor_name, data.instructor_presence, data.remarks || null, data.schedule_time || null, data.photo || null, data.checker_id || null]
+        ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [data.room_number, data.instructor_name, data.instructor_presence, data.is_late, data.remarks || null, data.schedule_time || null, data.photo || null, data.checker_id || null]
         );
         return result.insertId;
     } catch (error) {
@@ -58,6 +59,7 @@ export async function updateForm(data, id) {
             room_number = ?, 
             instructor_name = ?, 
             instructor_presence = ?, 
+            is_late = ?, 
             remarks = ?
          WHERE form_id = ?`,
         [
@@ -65,6 +67,9 @@ export async function updateForm(data, id) {
             data.instructor_name,
             data.instructor_presence !== undefined && data.instructor_presence !== null
                 ? data.instructor_presence
+                : 0, // fallback if null
+            data.is_late !== undefined && data.is_late !== null
+                ? data.is_late
                 : 0, // fallback if null
             data.remarks,
             id

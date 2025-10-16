@@ -27,7 +27,7 @@ const FormByIdPage = () => {
 
             setFormData((prevData) => ({
                 ...prevData,
-                room_number: room_id || '',
+                room_number: room_id.replace(/\s*\(.*?\)/g, '') || '',
                 instructor_email: instructor_email || '',
                 instructor_name: instructor || '',
                 schedule_time: to12Hour(start_time) + " - " + to12Hour(end_time) || '',
@@ -174,7 +174,7 @@ const FormByIdPage = () => {
                         <input
                             type="text"
                             name="room_number"
-                            value={schedule.schedule.room_id}
+                            value={schedule.schedule.room_id.replace(/\s*\(.*?\)/g, '')}
                             onChange={handleChange}
                             disabled
                             className="w-full px-3 py-2 border rounded"

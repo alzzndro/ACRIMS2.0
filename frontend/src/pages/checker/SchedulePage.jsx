@@ -106,7 +106,7 @@ export default function SchedulePage() {
                                             "bg-gray-300" // fallback
                                     }`}
                             />
-                            <h1 className="text-4xl font-bold">{room.room_id}</h1>
+                            <h1 className="text-4xl font-bold text-center">{room.room_id.replace(/\s*\(.*?\)/g, '')}</h1>
                         </div>
                     </div>
                 ))}

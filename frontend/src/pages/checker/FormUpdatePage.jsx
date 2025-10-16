@@ -87,6 +87,7 @@ const FormUpdatePage = () => {
                     />
                 </div>
 
+                {/* Instructor Presence */}
                 <div className="mb-4">
                     <label className="block mb-1">Instructor Presence</label>
                     <div className="flex flex-row gap-3">
@@ -102,7 +103,33 @@ const FormUpdatePage = () => {
                             className="border px-2 py-1 rounded"
                         />
 
-                        <span className="text-sm text-gray-600">Please mark this <i>"checked"</i> if the instructor present.</span>
+                        <span className="text-sm text-gray-600">Please mark this <i>"checked"</i> if the instructor is present.</span>
+                    </div>
+                </div>
+
+                {/* Lateness */}
+                <div className="mb-4">
+                    <label className="block mb-1">Instructor Lateness</label>
+                    <div className="flex flex-row gap-3">
+                        <input
+                            type="checkbox"
+                            checked={form.is_late === 1}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    is_late: e.target.checked ? 1 : 0,
+                                })
+                            }
+                            disabled={!form.instructor_presence}
+                            className="border px-2 py-1 rounded"
+                        />
+                        <span className="text-sm text-gray-600">
+                            Check this if the instructor was late.
+                            <br />
+                            <span className={form.instructor_presence ? "text-green-600" : "text-red-500"}>
+                                {form.instructor_presence ? '' : 'Only available when instructor is present.'}
+                            </span>
+                        </span>
                     </div>
                 </div>
 

@@ -35,7 +35,7 @@ const HomePage = () => {
 
     return (
         <>
-            <div className='h-svh relative @container/Home'>
+            <div className='h-svh relative @container/Home overflow-hidden'>
                 {/* Blue Container */}
                 <div className="h-52 w-full bg-[var(--blue-logo)] overflow-hidden">
                     <NavBarOne position="end" visibility="hidden" />

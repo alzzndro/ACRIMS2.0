@@ -28,7 +28,6 @@ const NavBarTwo = (props) => {
             <h1 className='h-full flex items-center text-2xl font-medium'>{props.message}</h1>
             <div className='flex flex-row gap-2 h-full'>
                 <button className='h-full w-12 flex justify-center items-center rounded-4xl focus:bg-gray-200 focus:text-red-500'><IoNotificationsOutline size={30} /></button>
-
                 <img
                     src={
                         user.profile_image_path
