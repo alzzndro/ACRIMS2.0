@@ -7,7 +7,7 @@ import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
-import { to12Hour } from '../../utils/timeFormat.js'
+import { to12Hour } from '../../utils/timeFormat.js';
 
 const NEON = '#00B4FF';
 const LIME = '#A8FF4A';
@@ -37,6 +37,10 @@ export default function DashboardPage() {
     useEffect(() => {
         fetchForms();
     }, []);
+
+    const handleNavigate = (id) => {
+        navigate(`/admin/dashboard/${id}`);
+    }
 
     async function fetchForms() {
         setLoading(true);
@@ -284,7 +288,11 @@ export default function DashboardPage() {
                                     </thead>
                                     <tbody className="divide-y divide-white/6">
                                         {filtered.reverse().map(f => (
-                                            <tr key={f.form_id} className="hover:bg-white/2 transition-colors">
+                                            <tr
+                                                key={f.form_id}
+                                                className="hover:bg-gray-100 transition-colors cursor-pointer"
+                                                onClick={() => { handleNavigate(f.form_id) }}
+                                            >
                                                 <td className="py-3">{f.form_id}</td>
                                                 <td className="py-3">{f.date_monitored}</td>
                                                 <td className="py-3">{to12Hour(f.time_monitored)}</td>
@@ -305,7 +313,7 @@ export default function DashboardPage() {
                         </div>
                     </section>
                 </div>
-            </div>
-        </AdminLayout>
+            </div >
+        </AdminLayout >
     );
 }

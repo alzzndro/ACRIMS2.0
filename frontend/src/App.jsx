@@ -23,6 +23,7 @@ import ReportsPage from './pages/admin/ReportsPage';
 import ScheduleManagementPage from './pages/admin/ScheduleManagementPage';
 import SchedulePage from './pages/checker/SchedulePage';
 import ScheduleTimetablePage from './pages/checker/ScheduleTimetablePage';
+import RecentFormByIdPage from './pages/admin/RecentFormByIdPage';
 
 function usePendingResend() {
   const [isResending, setIsResending] = useState(false);
@@ -197,6 +198,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path='/admin/dashboard/:id'
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <RecentFormByIdPage />
             </ProtectedRoute>
           }
         />
