@@ -36,6 +36,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchForms();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleNavigate = (id) => {

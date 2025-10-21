@@ -161,7 +161,7 @@ const RoomsPage = () => {
                         <div className="w-36 aspect-square shadow-2xs p-2 rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110">
                             <h1 className="text-2xl font-bold">{schedule.room_id.replace(/\s*\(.*?\)/g, '')}</h1>
                             <p className="text-sm font-light">{convertTo12HourFormat(schedule.start_time)} - {convertTo12HourFormat(schedule.end_time)}</p>
-                            <p>{schedule.instructor.slice(0, 11) + '...'}</p>
+                            <p>{schedule?.instructor?.slice(0, 11) + '...'}</p>
                         </div>
                     </div>
                 ))}

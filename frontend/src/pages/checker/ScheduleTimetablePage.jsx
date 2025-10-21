@@ -79,12 +79,6 @@ const ScheduleTimetablePage = () => {
         return { day, classes: filteredClasses };
     });
 
-
-
-    useEffect(() => {
-        console.log(filteredSchedules);
-    }, [filteredSchedules])
-
     return (
         <>
             <NavBarTwo />
