@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBarTwo from '../../components/checker/NavBarTwo';
 import axios from 'axios';
@@ -13,6 +13,14 @@ const FormPage = () => {
     const [startTime, setStartTime] = useState(null);
     const [endTime, setEndTime] = useState(null);
 
+    const navigate = useNavigate();
+
+    const [data, setData] = useState([]);
+
+    const CACHE_KEY = "schedule-cache";
+    const CACHE_EXPIRATION = 1000 * 60 * 10; // 10 minutes
+
+    // Toast
     const invalidNotify = () => {
         toast.error("Invalid", {
             position: "top-center",
@@ -39,8 +47,7 @@ const FormPage = () => {
         });
     }
 
-    const navigate = useNavigate();
-
+    // Payload Format
     const [formData, setFormData] = useState({
         room_number: '',
         instructor_name: '',
@@ -52,6 +59,8 @@ const FormPage = () => {
         photo: null,
     });
 
+
+    // Handles
     const handleChange = (e) => {
         const { name, type, checked, files, value } = e.target;
 
@@ -83,7 +92,7 @@ const FormPage = () => {
 
         const updatedFormData = {
             ...formData,
-            room_number: 'Room' + ' ' + formData.room_number,
+            room_number: formData.room_number,
             schedule_time: combinedSchedule,
         };
 
@@ -131,6 +140,81 @@ const FormPage = () => {
         }
     };
 
+    // fetch data
+    const fetchData = async () => {
+        try {
+            // 1️⃣ Try to load from cache first
+            const cached = await localforage.getItem(CACHE_KEY);
+            if (cached && cached.data) {
+                setData(cached.data);
+                const expired = Date.now() - cached.timestamp > CACHE_EXPIRATION;
+                if (!expired) return; // cache valid, skip API
+            }
+
+            // Getting token
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("You need to log in first!");
+                return;
+            }
+
+            // Fetch fresh data from API
+            const [jsonResponse, mysqlResponse] = await Promise.all([
+                axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).catch(() => ({ data: { files: [] } })), // fallback
+
+                axios.get(`${import.meta.env.VITE_API_URL}/schedules/current`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).catch(() => ({ data: { schedules: [] } })) // fallback
+            ]);
+
+            const jsonSchedules = (jsonResponse.data.files || []).flatMap(file =>
+                (file.schedules || []).map(schedule => ({
+                    ...schedule,
+                    source: 'json',
+                    source_file: file.filename
+                }))
+            );
+
+            const mysqlSchedules = (mysqlResponse.data.schedules || []).map(schedule => ({
+                ...schedule,
+                source: 'mysql'
+            }));
+
+            const allSchedules = [...jsonSchedules, ...mysqlSchedules];
+
+            // Save fresh data to cache
+            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: allSchedules });
+            console.log("schedule cached");
+
+
+            setData(allSchedules);
+
+            console.log("Total schedules loaded:", allSchedules.length);
+
+        } catch (error) {
+            console.log("Error fetching schedules:", error);
+            setData([]); // fallback empty array
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [])
+
+    useEffect(() => {
+        if (data.length === 0) {
+            console.warn("No schedules available.");
+        } else {
+            console.log("data detected");
+
+        }
+        console.log(data);
+
+    }, [data]);
+
+
     if (loading) {
         return (
             <>
@@ -162,12 +246,22 @@ const FormPage = () => {
                         <label className="block text-md font-medium text-gray-700 mb-1">Room Number</label>
                         <input
                             type="text"
+                            list='room_list'
                             name="room_number"
                             value={formData.room_number}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded"
                             required
                         />
+                        <datalist id='room_list'>
+                            {[...new Set(
+                                data
+                                    .map(item => item.room_id)
+                                    .filter(room => room && room.trim() !== "")
+                            )].map((room, index) => (
+                                <option key={index} value={room} />
+                            ))}
+                        </datalist>
                     </div>
 
                     {/* Instructor Name */}

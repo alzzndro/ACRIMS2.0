@@ -12,7 +12,7 @@ const NavBarOne = (props) => {
     const navigate = useNavigate();
 
     const handleBackArrow = () => {
-        navigate(-1);
+        navigate('/home');
     }
 
     return (

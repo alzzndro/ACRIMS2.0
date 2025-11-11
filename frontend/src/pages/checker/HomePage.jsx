@@ -1,16 +1,23 @@
-import { Link } from 'react-router-dom'
-import '../../assets/css/common/variables.css'
-import NavBarOne from '../../components/checker/NavBarOne'
-import RedBox from '../../components/designs/RedBox'
-import { FaDoorClosed } from "react-icons/fa"
-import { FaRegSquarePlus } from "react-icons/fa6"
-import { FaCalendarAlt } from "react-icons/fa"
-import { CiViewList } from "react-icons/ci"
-import useGetMe from '../../hooks/useGetMe'
-import Loading from '../../components/common/Loading'
+import { Link } from 'react-router-dom';
+import '../../assets/css/common/variables.css';
+import NavBarOne from '../../components/checker/NavBarOne';
+import RedBox from '../../components/designs/RedBox';
+import { FaDoorClosed } from "react-icons/fa";
+import { FaRegSquarePlus } from "react-icons/fa6";
+import { FaCalendarAlt } from "react-icons/fa";
+import { CiViewList } from "react-icons/ci";
+import useGetMe from '../../hooks/useGetMe';
+import Loading from '../../components/common/Loading';
+import axios from 'axios';
+import { useState, useEffect } from 'react';
+import localforage from 'localforage';
 
 const HomePage = () => {
     const { user, error, loading } = useGetMe();
+    const [data, setData] = useState([]);
+
+    const CACHE_KEY = "schedule-cache";
+    const CACHE_EXPIRATION = 1000 * 60 * 10; // 10 minutes
 
     const profileImageUrl = user?.profile_image_path
         ? `${import.meta.env.VITE_API_URL}${user.profile_image_path}`
@@ -24,6 +31,75 @@ const HomePage = () => {
             .map(name => name.charAt(0).toUpperCase() + name.slice(1))
             .join(" ");
     }
+
+    // fetch data
+    const fetchData = async () => {
+        try {
+            // 1️⃣ Try to load from cache first
+            const cached = await localforage.getItem(CACHE_KEY);
+            if (cached && cached.data) {
+                setData(cached.data);
+                const expired = Date.now() - cached.timestamp > CACHE_EXPIRATION;
+                if (!expired) return; // cache valid, skip API
+            }
+
+            // Getting token
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("You need to log in first!");
+                return;
+            }
+
+            // Fetch fresh data from API
+            const [jsonResponse, mysqlResponse] = await Promise.all([
+                axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).catch(() => ({ data: { files: [] } })), // fallback
+
+                axios.get(`${import.meta.env.VITE_API_URL}/schedules/current`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                }).catch(() => ({ data: { schedules: [] } })) // fallback
+            ]);
+
+            const jsonSchedules = (jsonResponse.data.files || []).flatMap(file =>
+                (file.schedules || []).map(schedule => ({
+                    ...schedule,
+                    source: 'json',
+                    source_file: file.filename
+                }))
+            );
+
+            const mysqlSchedules = (mysqlResponse.data.schedules || []).map(schedule => ({
+                ...schedule,
+                source: 'mysql'
+            }));
+
+            const allSchedules = [...jsonSchedules, ...mysqlSchedules];
+
+            // Save fresh data to cache
+            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: allSchedules });
+            console.log("schedule cached");
+
+
+            setData(allSchedules);
+
+            console.log("Total schedules loaded:", allSchedules.length);
+
+        } catch (error) {
+            console.log("Error fetching schedules:", error);
+            setData([]); // fallback empty array
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [])
+
+    useEffect(() => {
+        if (data.length === 0) {
+            console.warn("No schedules available.");
+        }
+    }, [data]);
 
     if (loading) {
         return <Loading />;

@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import NavBarTwo from "../../components/checker/NavBarTwo";
 
 const ExportsPage = () => {
     const [startDate, setStartDate] = useState(null);
@@ -120,26 +121,29 @@ const ExportsPage = () => {
     };
 
     return (
-        <div className="p-8 max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Export ACRIMS Report</h1>
+        <>
+            <NavBarTwo />
+            <div className="p-8 max-w-md mx-auto">
+                <h1 className="text-2xl font-bold mb-6">Export ACRIMS Report</h1>
 
-            <label className="block text-sm font-semibold mb-2">Start Date</label>
-            <DatePicker
-                selected={startDate}
-                onChange={setStartDate}
-                dateFormat="yyyy-MM-dd"
-                placeholderText="Select start date"
-                className="border p-2 w-full rounded mb-6"
-            />
+                <label className="block text-sm font-semibold mb-2">Start Date</label>
+                <DatePicker
+                    selected={startDate}
+                    onChange={setStartDate}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Select start date"
+                    className="border p-2 w-full rounded mb-6"
+                />
 
-            <button
-                onClick={handleExport}
-                disabled={loading}
-                className="bg-green-600 text-white py-2 px-4 rounded w-full hover:bg-green-700"
-            >
-                {loading ? "Exporting..." : "Export CSV"}
-            </button>
-        </div>
+                <button
+                    onClick={handleExport}
+                    disabled={loading}
+                    className="bg-green-600 text-white py-2 px-4 rounded w-full hover:bg-green-700"
+                >
+                    {loading ? "Exporting..." : "Export CSV"}
+                </button>
+            </div>
+        </>
     );
 };
 
