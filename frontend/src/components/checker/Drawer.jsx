@@ -33,6 +33,11 @@ const Drawer = (props) => {
                         Pending Forms
                     </li>
                 </Link>
+                <Link to="/form/export" onClick={props.btnClck}>
+                    <li className="px-4 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
+                        Export to CSV
+                    </li>
+                </Link>
                 <Link to="/logout" onClick={props.btnClck}>
                     <li className="px-4 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
                         Logout

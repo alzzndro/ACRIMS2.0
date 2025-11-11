@@ -197,7 +197,7 @@ const FormByIdPage = () => {
 
                     {/* Instructor Presence */}
                     <div className="">
-                        <label className="block text-md font-medium text-gray-700">Instructor Present?</label>
+                        <label className="block text-md font-medium text-gray-700">Instructor Presence</label>
                         <div className="flex flex-row gap-3">
                             <input
                                 type="checkbox"

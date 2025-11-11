@@ -14,7 +14,7 @@ const FormPage = () => {
     const [endTime, setEndTime] = useState(null);
 
     const invalidNotify = () => {
-        toast.error("sd", {
+        toast.error("Invalid", {
             position: "top-center",
             autoClose: 5000,
             hideProgressBar: false,
@@ -25,6 +25,19 @@ const FormPage = () => {
             theme: "light",
         });
     };
+
+    const successNotify = () => {
+        toast.success('Form Added!', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+        });
+    }
 
     const navigate = useNavigate();
 
@@ -93,14 +106,17 @@ const FormPage = () => {
             const { success, message } = data;
 
             if (success) {
-                console.log(message);
-                invalidNotify();
+                successNotify();
+                setTimeout(() => {
+                    navigate("/home");
+                }, 1500); // wait 1.5 seconds
             } else {
                 invalidNotify();
                 console.error("Adding failed:", message);
+                setTimeout(() => {
+                    navigate("/home");
+                }, 1500); // wait 1.5 seconds
             }
-
-            navigate("/home");
         } catch (error) {
             setLoading(true);
             console.log("Save to local", error);
@@ -116,7 +132,23 @@ const FormPage = () => {
     };
 
     if (loading) {
-        return <Loading />;
+        return (
+            <>
+                <Loading />
+                <ToastContainer
+                    position="top-center"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                />
+            </>
+        );
     }
 
     return (
@@ -272,19 +304,6 @@ const FormPage = () => {
                     </div>
                 </form>
             </div>
-
-            <ToastContainer
-                position="top-center"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="light"
-            />
         </>
     );
 };

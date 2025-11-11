@@ -24,6 +24,7 @@ import ScheduleManagementPage from './pages/admin/ScheduleManagementPage';
 import SchedulePage from './pages/checker/SchedulePage';
 import ScheduleTimetablePage from './pages/checker/ScheduleTimetablePage';
 import RecentFormByIdPage from './pages/admin/RecentFormByIdPage';
+import ExportsPage from './pages/checker/ExportsPage';
 
 function usePendingResend() {
   const [isResending, setIsResending] = useState(false);
@@ -144,6 +145,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['checker']}>
               <PendingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path='/form/export'
+          element={
+            <ProtectedRoute allowedRoles={['checker']}>
+              <ExportsPage />
             </ProtectedRoute>
           }
         />

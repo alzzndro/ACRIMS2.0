@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import NavBarTwo from "../../components/checker/NavBarTwo";
 import axios from "axios";
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { IoArrowBack } from 'react-icons/io5';
+import localforage from "localforage";
+
+const CACHE_KEY = "schedule-cache";
+const CACHE_EXPIRATION = 1000 * 60 * 10; // 10 minutes
 
 const ScheduleTimetablePage = () => {
     const { id } = useParams();
@@ -15,11 +18,51 @@ const ScheduleTimetablePage = () => {
 
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    const handleBackArrow = () => {
-        navigate(-1);
-    }
+    const handleBackArrow = () => navigate(-1);
 
-    // Group and SORT schedules per day
+    // Load cached schedule or fetch from API
+    const loadSchedules = async () => {
+        const cached = await localforage.getItem(CACHE_KEY);
+        if (cached) {
+            setSchedules(cached.data); // use cached data immediately
+            const expired = Date.now() - cached.timestamp > CACHE_EXPIRATION;
+            if (expired) {
+                fetchSchedules(); // refresh in background
+            }
+            return;
+        }
+        fetchSchedules(); // no cache, fetch fresh
+    };
+
+    const fetchSchedules = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const jsonSchedules = (response.data.files || []).flatMap(file =>
+                (file.schedules || []).map(schedule => ({
+                    ...schedule,
+                    source: 'json',
+                    source_file: file.filename
+                }))
+            );
+
+            setSchedules(jsonSchedules);
+            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: jsonSchedules });
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    useEffect(() => {
+        loadSchedules();
+    }, []);
+
+    // Group and sort schedules per day
     const groupedSchedules = days.map(day => {
         const classes = schedules
             .filter(s => s.day === day)
@@ -36,46 +79,9 @@ const ScheduleTimetablePage = () => {
         return `${adjusted}:${m} ${ampm}`;
     };
 
-    const fetchData = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                console.log("no token found");
-                return;
-            }
-
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            const jsonSchedules = (response.data.files || []).flatMap(file =>
-                (file.schedules || []).map(schedule => ({
-                    ...schedule,
-                    source: 'json',
-                    source_file: file.filename
-                }))
-            );
-
-            setSchedules(jsonSchedules);
-
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    useEffect(() => {
-        fetchData();
-    }, [])
-
     const filteredSchedules = groupedSchedules.map(({ day, classes }) => {
-        // Show all if "All Schedules" selected (scheduleNumber === 3)
-        if (scheduleNumber === 3) {
-            return { day, classes };
-        }
-
-        // Filter each class by schedule_number
+        if (scheduleNumber === 3) return { day, classes };
         const filteredClasses = classes.filter(cls => cls.schedule_number === scheduleNumber);
-
         return { day, classes: filteredClasses };
     });
 
@@ -88,14 +94,12 @@ const ScheduleTimetablePage = () => {
                 {/* Scrollable container */}
                 <div className="overflow-x-auto">
                     <div className="min-w-[900px]">
-                        {/* Days Header */}
                         <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold text-gray-800 mb-2">
                             {groupedSchedules.map(({ day }) => (
                                 <div key={day}>{day}</div>
                             ))}
                         </div>
 
-                        {/* Timetable Content */}
                         <div className="grid grid-cols-7 gap-2">
                             {filteredSchedules.map(({ day, classes }) => (
                                 <div key={day} className="flex flex-col gap-2">
@@ -104,7 +108,7 @@ const ScheduleTimetablePage = () => {
                                             Not Scheduled
                                         </div>
                                     ) : (
-                                        classes.map((cls) => (
+                                        classes.map(cls => (
                                             <div
                                                 key={cls.id}
                                                 className="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow text-xs"
@@ -134,30 +138,15 @@ const ScheduleTimetablePage = () => {
                             <h3 className="text-lg font-semibold">Select Schedule Number</h3>
                         </div>
                         <div className="flex flex-row justify-around flex-wrap gap-4">
-                            <button
-                                onClick={() => {
-                                    setModalSchedule(false)
-                                    setScheduleNumber(1);
-                                }}
-                                className="border border-black/50 p-4 rounded-2xl focus:scale-110 bg-red-800 text-white font-bold">
-                                Schedule 1
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setModalSchedule(false)
-                                    setScheduleNumber(2);
-                                }}
-                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-red-800 text-white font-bold">
-                                Schedule 2
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setModalSchedule(false)
-                                    setScheduleNumber(3);
-                                }}
-                                className="border border-black/50 focus:scale-110 p-4 rounded-2xl bg-blue-800 text-white font-bold">
-                                All Schedules
-                            </button>
+                            {[1, 2, 3].map(num => (
+                                <button
+                                    key={num}
+                                    onClick={() => { setModalSchedule(false); setScheduleNumber(num); }}
+                                    className={`border border-black/50 p-4 rounded-2xl focus:scale-110 ${num === 3 ? "bg-blue-800 text-white" : "bg-red-800 text-white"} font-bold`}
+                                >
+                                    {num === 3 ? "All Schedules" : `Schedule ${num}`}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>

@@ -4,10 +4,10 @@
       "id": "S1",
       "room_id": "204",
       "room_name": "204 PHY LAB",
-      "day": "Monday",
+      "day": "Thursday",
       "schedule_number": 1,
-      "start_time": "08:00:00",
-      "end_time": "09:30:00",
+      "start_time": "01:00:00",
+      "end_time": "24:30:00",
       "subject": "MANPRIN",
       "section": "BSA 251-1 Bridging",
       "instructor": "MS.BENJAMIN",
@@ -3108,7 +3108,7 @@
       "floor": "first"
     },
     {
-      "id": "S232",
+      "id": "S932",
       "room_id": "106",
       "room_name": "106 COM LAB 2",
       "day": "Monday",
@@ -3121,7 +3121,7 @@
       "floor": "first"
     },
     {
-      "id": "S232",
+      "id": "S2342",
       "room_id": "106",
       "room_name": "106 COM LAB 2",
       "day": "Monday",
@@ -4784,19 +4784,5 @@
       "instructor": "MS.CALINTIG",
       "floor": "first"
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   ]
 }

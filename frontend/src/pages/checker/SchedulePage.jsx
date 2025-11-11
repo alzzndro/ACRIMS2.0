@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import localforage from "localforage";
 import NavBarTwo from "../../components/checker/NavBarTwo";
 import { FaDoorClosed } from "react-icons/fa";
+
+const CACHE_KEY = "schedule-cache";
+const CACHE_EXPIRATION = 1000 * 60 * 10; // 10 minutes
 
 export default function SchedulePage() {
     const [scheduleData, setScheduleData] = useState([]);
@@ -13,7 +17,7 @@ export default function SchedulePage() {
 
     const handleClick = (id) => {
         navigate(`/schedules/timetable/${id}`);
-    }
+    };
 
     const fetchData = async () => {
         try {
@@ -32,14 +36,34 @@ export default function SchedulePage() {
                 }))
             );
 
+            // Save to state and cache
             setScheduleData(jsonSchedules);
+            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: jsonSchedules });
         } catch (error) {
             console.log("Error: ", error);
         }
     };
 
+    const loadSchedule = async () => {
+        const cached = await localforage.getItem(CACHE_KEY);
+        if (cached) {
+            const expired = Date.now() - cached.timestamp > CACHE_EXPIRATION;
+
+            setScheduleData(cached.data); // use cached data immediately
+
+            if (expired) {
+                // refresh in background
+                fetchData();
+            }
+            return;
+        }
+
+        // no cache, fetch from API
+        await fetchData();
+    };
+
     useEffect(() => {
-        fetchData();
+        loadSchedule();
     }, []);
 
     // Filtered and sorted list of unique room/floor combinations
@@ -61,15 +85,12 @@ export default function SchedulePage() {
             return a.floor.localeCompare(b.floor);
         });
 
-
-
     return (
         <>
             <NavBarTwo message="Select Room" />
 
             {/* Search and Filter Section */}
             <div className="w-full py-2 px-4 flex justify-between items-center">
-                {/* Search */}
                 <input
                     type="text"
                     placeholder="Search by Room ID"
@@ -78,7 +99,6 @@ export default function SchedulePage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
 
-                {/* Floor Filter Dropdown */}
                 <select
                     value={floorFilter}
                     onChange={(e) => setFloorFilter(e.target.value)}
@@ -96,7 +116,7 @@ export default function SchedulePage() {
                 {filteredRooms.map((room, index) => (
                     <div
                         key={index}
-                        onClick={() => { handleClick(room.room_id) }}
+                        onClick={() => handleClick(room.room_id)}
                         className="overflow-x-auto bg-blue-950 text-white shadow-xl shadow-gray-400 rounded-3xl"
                     >
                         <div className="w-36 aspect-square p-2 rounded-3xl flex flex-col justify-center items-center gap-1">
@@ -105,7 +125,7 @@ export default function SchedulePage() {
                                 className={`p-2 rounded-full ${room.floor.toLowerCase() === "first" ? "text-white" :
                                     room.floor.toLowerCase() === "second" ? "text-yellow-300" :
                                         room.floor.toLowerCase() === "third" ? "text-red-500" :
-                                            "bg-gray-300" // fallback
+                                            "bg-gray-300"
                                     }`}
                             />
                             <h1 className="text-4xl font-bold text-center">{room.room_id.replace(/\s*\(.*?\)/g, '')}</h1>

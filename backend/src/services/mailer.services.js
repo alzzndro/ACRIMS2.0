@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -8,21 +8,40 @@ const transporter = nodemailer.createTransport({
         user: process.env.MAILER_EMAIL,
         pass: process.env.MAILER_PASS,
     },
-})
+});
 
+/**
+ * Send a formal email notifying the recipient of absence.
+ * @param {string} to - The recipient's email address.
+ */
 export async function sendEmailAbsent(to) {
     try {
         const emailInfo = {
-            from: process.env.MAILER_EMAIL,
+            from: `"Asian College Monitoring Team" <${process.env.MAILER_EMAIL}>`,
             to,
-            subject: `Good day! ${to}`,
-            text: "This is from the nurses office, we would like to inform you that you are absent or not in your respective classroom today!"
-        }
+            subject: "Attendance Notice – Absence Notification",
+            text: `Good day,
 
-        console.log(`Message sent to ${to}`)
-        return await transporter.sendMail(emailInfo)
+This is an official message from the Asian College Monitoring Team.
+
+We would like to inform you that you were marked as *absent* or not present in your respective classroom today.
+
+If you have any valid reason or concerns regarding your attendance, please reply to this email as soon as possible.
+
+Thank you for your prompt attention.
+
+Sincerely,
+Asian College Monitoring Team
+Asian College
+monitoring@asiancollege.edu
+`,
+        };
+
+        const info = await transporter.sendMail(emailInfo);
+        console.log(`Message sent to ${to}: ${info.messageId}`);
+        return info;
     } catch (error) {
-        console.log("Error in: ", error);
+        console.error("Error sending email:", error);
     }
 }
 

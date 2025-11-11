@@ -37,7 +37,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({
-        error: err.message || "Somethang! Went Wrong!!",
+        error: err.message || "Global Error Somethang! Went Wrong!!",
     });
 });
 

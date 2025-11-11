@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 // import { div } from "framer-motion/client";
 import { X } from 'lucide-react';
 import { IoArrowBack } from 'react-icons/io5';
+import localforage from "localforage";
 
 const RoomsPage = () => {
     const [scheduleNumber, setScheduleNumber] = useState();
@@ -13,6 +14,8 @@ const RoomsPage = () => {
     const [floorFilter, setFloorFilter] = useState("");  // To store the selected floor filter
     const [modalSchedule, setModalSchedule] = useState(true);
     const navigate = useNavigate();
+    const CACHE_KEY = "schedule-cache";
+    const CACHE_EXPIRATION = 1000 * 60 * 10; // 10 minutes
 
     // Filter the schedule for the current time schedule of the day
     const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }); // get today's name of the week
@@ -55,30 +58,31 @@ const RoomsPage = () => {
     // fetch data
     const fetchData = async () => {
         try {
+            // 1️⃣ Try to load from cache first
+            const cached = await localforage.getItem(CACHE_KEY);
+            if (cached && cached.data) {
+                setData(cached.data);
+                const expired = Date.now() - cached.timestamp > CACHE_EXPIRATION;
+                if (!expired) return; // cache valid, skip API
+            }
+
             const token = localStorage.getItem("token");
             if (!token) {
                 alert("You need to log in first!");
                 return;
             }
 
-            // Fetch schedules from both sources
+            // 2️⃣ Fetch fresh data from API
             const [jsonResponse, mysqlResponse] = await Promise.all([
                 axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
                     headers: { Authorization: `Bearer ${token}` }
-                }).catch((error) => {
-                    console.log("JSON schedules error:", error);
-                    return { data: { files: [] } }; // Fallback to empty files array
-                }),
+                }).catch(() => ({ data: { files: [] } })), // fallback
 
                 axios.get(`${import.meta.env.VITE_API_URL}/schedules/current`, {
                     headers: { Authorization: `Bearer ${token}` }
-                }).catch((error) => {
-                    console.log("MySQL schedules error:", error);
-                    return { data: { schedules: [] } }; // Fallback to empty schedules array
-                })
+                }).catch(() => ({ data: { schedules: [] } })) // fallback
             ]);
 
-            // Flatten schedules from JSON files
             const jsonSchedules = (jsonResponse.data.files || []).flatMap(file =>
                 (file.schedules || []).map(schedule => ({
                     ...schedule,
@@ -87,20 +91,25 @@ const RoomsPage = () => {
                 }))
             );
 
-            // Get MySQL schedules
             const mysqlSchedules = (mysqlResponse.data.schedules || []).map(schedule => ({
                 ...schedule,
                 source: 'mysql'
             }));
 
-            // Combine both sources
             const allSchedules = [...jsonSchedules, ...mysqlSchedules];
-            console.log("Total schedules loaded:", allSchedules.length, "(JSON:", jsonSchedules.length, "MySQL:", mysqlSchedules.length, ")");
+
+            // 3️⃣ Save fresh data to cache
+            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: allSchedules });
+            console.log("schedule cached");
+
+
             setData(allSchedules);
 
+            console.log("Total schedules loaded:", allSchedules.length);
+
         } catch (error) {
-            console.log("Error sa pag fetch", error);
-            setData([]); // Set empty array on error
+            console.log("Error fetching schedules:", error);
+            setData([]); // fallback empty array
         }
     };
 

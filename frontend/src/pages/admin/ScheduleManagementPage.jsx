@@ -230,6 +230,17 @@ export default function ScheduleManagementPage() {
         }
     }
 
+    function getHourDifference(start, end) {
+        const [startHour, startMin] = start.split(':').map(Number);
+        const [endHour, endMin] = end.split(':').map(Number);
+        const startDate = new Date(0, 0, 0, startHour, startMin);
+        const endDate = new Date(0, 0, 0, endHour, endMin);
+
+        let diff = (endDate - startDate) / (1000 * 60 * 60); // in hours
+        if (diff < 0) diff += 24; // handle overnight times (optional)
+        return diff;
+    }
+
     // Get unique rooms for filter
     const rooms = [...new Set(schedules.map(s => s.room_id))].sort();
 
@@ -605,7 +616,6 @@ export default function ScheduleManagementPage() {
                                         <option value="first">First Floor</option>
                                         <option value="second">Second Floor</option>
                                         <option value="third">Third Floor</option>
-                                        <option value="fourth">Fourth Floor</option>
                                     </select>
                                 </div>
 
@@ -630,13 +640,27 @@ export default function ScheduleManagementPage() {
                                     </label>
                                     <select
                                         value={newSchedule.end_time}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, end_time: e.target.value })}
+                                        onChange={(e) => {
+                                            const endTime = e.target.value;
+                                            const startTime = newSchedule.start_time;
+
+                                            if (startTime) {
+                                                const diff = getHourDifference(startTime, endTime);
+                                                if (diff > 8) {
+                                                    alert("End time cannot be more than 8 hours after the start time.");
+                                                    return; // stop update
+                                                }
+                                            }
+
+                                            setNewSchedule({ ...newSchedule, end_time: endTime });
+                                        }}
                                         className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
                                     >
                                         {TIME_SLOTS.map(time => (
                                             <option key={time} value={time}>{time}</option>
                                         ))}
                                     </select>
+
                                 </div>
 
                                 <div>
@@ -776,7 +800,6 @@ export default function ScheduleManagementPage() {
                                         <option value="first">First Floor</option>
                                         <option value="second">Second Floor</option>
                                         <option value="third">Third Floor</option>
-                                        <option value="fourth">Fourth Floor</option>
                                     </select>
                                 </div>
 
