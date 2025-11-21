@@ -5,8 +5,8 @@ This project is our final output in years of taking Bachelor of Science in Infor
 # Description
 
 This project is for our School's Room and Instructor Monitoring System.
-Currently, the school utilizes paper-based monitoring and manually inputting it through a spreadsheet.
-This method makes it more inefficient and more prone to errors, whether human-errors and digital-errors.
+Currently, the school utilizes a paper-based monitoring and manually inputting it through a spreadsheet.
+This method makes it more inefficient and more prone to errors, whether human-errors or digital-errors.
 
 Our web-app solve that problem by digitalizing the form and making a centralized dashboard that an admin can oversee.
 
