@@ -127,17 +127,36 @@ const FormPage = () => {
                 }, 1500); // wait 1.5 seconds
             }
         } catch (error) {
-            setLoading(true);
-            console.log("Save to local", error);
+            setLoading(false);
+            console.log("Offline, saving locally...", error);
 
             const offlinePayload = {
                 id: Date.now(),
-                formData,
+                formData: updatedFormData,
             };
 
             await localforage.setItem(`pending-${offlinePayload.id}`, offlinePayload);
+
+            // Background Sync registration
+            if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    await reg.sync.register('sync-pending-forms');
+                    console.log('Background sync registered: sync-pending-forms');
+                } catch (err) {
+                    console.log('Background sync registration failed (will rely on online listener):', err);
+                }
+            } else {
+                console.log('Background sync not supported; will rely on window.online listener');
+            }
+
+            toast.info("Saved offline. Will sync when you're online.", {
+                position: "top-center"
+            });
+
             navigate("/home");
         }
+
     };
 
     // fetch data
@@ -208,11 +227,35 @@ const FormPage = () => {
             console.warn("No schedules available.");
         } else {
             console.log("data detected");
-
         }
-        console.log(data);
-
     }, [data]);
+
+    // Validate start & end time difference
+    useEffect(() => {
+        if (!startTime || !endTime) return;
+
+        const start = new Date(`1970-01-01T${startTime}`);
+        const end = new Date(`1970-01-01T${endTime}`);
+
+        // End cannot be earlier
+        if (end < start) {
+            toast.error("End time cannot be earlier than start time.", {
+                position: "top-center",
+            });
+            setEndTime("");
+            return;
+        }
+
+        // End cannot exceed 5 hours after start
+        const diffHours = (end - start) / (1000 * 60 * 60);
+
+        if (diffHours > 5) {
+            toast.error("End time cannot be more than 5 hours after start time.", {
+                position: "top-center",
+            });
+            setEndTime("");
+        }
+    }, [startTime, endTime]);
 
 
     if (loading) {

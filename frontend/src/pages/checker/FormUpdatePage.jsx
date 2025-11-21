@@ -4,6 +4,7 @@ import axios from "axios"
 import { useNavigate } from "react-router-dom"
 import NavBarTwo from "../../components/checker/NavBarTwo"
 import Loading from "../../components/common/Loading"
+import { IoArrowBack } from "react-icons/io5"
 
 function convertTo12HourFormat(time) {
     const [hour, minute] = time.split(":").map(Number);
@@ -15,6 +16,7 @@ function convertTo12HourFormat(time) {
 const FormUpdatePage = () => {
     const { id } = useParams(); // get :id from URL
     const [form, setForm] = useState(null);
+    const [modalConfirmation, setModalConfirmation] = useState(false);
 
     const navigate = useNavigate();
 
@@ -34,6 +36,21 @@ const FormUpdatePage = () => {
             setForm(response.data);
         } catch (error) {
             console.log("Error fetching form:", error);
+        }
+    }
+
+    const handleDelete = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            await axios.delete(
+                `${import.meta.env.VITE_API_URL}/form/delete/${id}`,
+                { headers: { Authorization: `Bearer ${token}` }, data: form }
+            );
+            console.log("Form Deleted successfully!");
+            navigate(-1);
+        } catch (error) {
+            console.log(error, "Error in deleting form.");
         }
     }
 
@@ -161,6 +178,44 @@ const FormUpdatePage = () => {
                     )}
                     <p className="text-end italic text-xs">not editable</p>
                 </div>
+
+                <div className="">
+                    <button
+                        onClick={() => setModalConfirmation(prev => !prev)}
+                        className="px-4 py-2 bg-[var(--red-logo)] text-white font-bold hover:bg-blue-600 w-full h-15 text-xl relative"
+                    >
+                        Delete Form
+                    </button>
+                </div>
+
+                {modalConfirmation && (
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+                            <div className="flex flex-col items-center justify-start mb-6 gap-4">
+                                <div className="w-full flex justify-end">
+                                    <button onClick={() => { setModalConfirmation(prev => !prev) }} className='w-10 aspect-square text-2xl  rounded-md flex justify-center items-center bg-red-400 text-white'>
+                                        &times;
+                                    </button>
+                                </div>
+                                <h3 className="text-lg font-semibold">Are you sure you want to delete?</h3>
+                            </div>
+                            <div className="flex flex-row justify-center gap-10">
+                                <button
+                                    onClick={handleDelete}
+                                    className="border w-24 border-black/50 p-4 rounded-2xl focus:scale-110 bg-green-800 text-white font-bold">
+                                    Yes
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setModalConfirmation(prev => !prev)
+                                    }}
+                                    className="border w-24 border-black/50 focus:scale-110 p-4 rounded-2xl bg-red-600 text-white font-bold">
+                                    No
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="h-15 w-full">
 

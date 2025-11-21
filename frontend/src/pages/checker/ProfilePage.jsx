@@ -203,13 +203,13 @@ const ProfilePage = () => {
                 {/* Body */}
                 <div className="bg-gray-100 mt-[-1rem] p-10 w-full h-[calc(100vh-13rem)] rounded-2xl">
                     <div className="flex flex-row justify-around">
-                        <div className="w-30 h-20 flex flex-col gap-1.5 justify-center items-center rounded-xl shadow-md bg-white">
+                        <div className="w-30 h-32 flex flex-col gap-1.5 justify-center items-center rounded-xl shadow-md bg-white">
                             <h1 className="font-bold text-3xl">{todayChecked}</h1>
-                            <p className="text-gray-500 italic">Today's Check</p>
+                            <p className="text-gray-500 italic text-center">Submitted Form/s Today</p>
                         </div>
-                        <div className="w-30 h-20 flex flex-col gap-1.5 justify-center items-center rounded-xl shadow-md bg-white">
+                        <div className="w-30 h-32 flex flex-col gap-1.5 justify-center items-center rounded-xl shadow-md bg-white">
                             <h1 className="font-bold text-3xl">{totalChecked}</h1>
-                            <p className="text-gray-500 italic">Total Checked</p>
+                            <p className="text-gray-500 italic text-center">Total Submitted Form/s </p>
                         </div>
                     </div>
                 </div>

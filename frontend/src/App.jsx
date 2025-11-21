@@ -31,11 +31,8 @@ function usePendingResend() {
 
   useEffect(() => {
     const tryResend = async () => {
-      if (localStorage.getItem("resend_lock")) {
-        return;
-      }
+      if (localStorage.getItem("resend_lock")) return;
 
-      // ✅ acquire lock
       localStorage.setItem("resend_lock", "true");
       setIsResending(true);
 
@@ -49,12 +46,12 @@ function usePendingResend() {
 
           Object.entries(form.formData).forEach(([k, v]) => {
             if (v !== null) payload.append(k, v);
-          })
+          });
 
           try {
             await axios.post(`${import.meta.env.VITE_API_URL}/form/add`, payload, {
               headers: { Authorization: `Bearer ${token}` },
-            })
+            });
 
             await localforage.removeItem(key);
             console.log(`✅ Resent form ${key} successfully`);
@@ -64,217 +61,121 @@ function usePendingResend() {
         }
       }
 
-      // ✅ release lock
-      setIsResending(false)
+      setIsResending(false);
       localStorage.removeItem("resend_lock");
     };
 
-    if (navigator.onLine) {
-      tryResend();
-    };
+    if (navigator.onLine) tryResend();
 
-    const handleOnline = () => {
-      tryResend();
-    };
-
+    const handleOnline = () => tryResend();
     window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
+
+    // Listen for service worker messages (Background Sync)
+    function onSWMessage(event) {
+      if (!event.data) return;
+      if (event.data.type === 'SYNC_PENDING_FORMS') {
+        console.log('Received SW request to sync pending forms');
+        tryResend();
+      }
+    }
+
+    navigator.serviceWorker?.addEventListener?.('message', onSWMessage);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      navigator.serviceWorker?.removeEventListener?.('message', onSWMessage);
+    };
   }, [isResending]);
 }
 
-// APP _____________________________________________________________________________________________
-
+// ---------------------------------------------------
+// APP COMPONENT
+// ---------------------------------------------------
 function App() {
-  usePendingResend()
+  usePendingResend();
 
   return (
     <Router>
       <Routes>
+        <Route path='/' element={<LoginPage />} />
+        <Route path='/logout' element={<Logout />} />
 
-        <Route
-          path='/'
-          element={
-            <LoginPage />
-          }
-        />
+        <Route path='/home' element={
+          <ProtectedRoute allowedRoles={['checker']}><HomePage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/logout'
-          element={
-            <Logout />
-          }
-        />
+        <Route path='/rooms' element={
+          <ProtectedRoute allowedRoles={['checker']}><RoomsPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/home'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/mylist' element={
+          <ProtectedRoute allowedRoles={['checker']}><MyListPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/rooms'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <RoomsPage />
-            </ProtectedRoute>
-          } />
+        <Route path='/form/new' element={
+          <ProtectedRoute allowedRoles={['checker']}><FormPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/mylist'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <MyListPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/form/pending' element={
+          <ProtectedRoute allowedRoles={['checker']}><PendingPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/form/new'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <FormPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/form/export' element={
+          <ProtectedRoute allowedRoles={['checker']}><ExportsPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/form/pending'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <PendingPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/users/me' element={
+          <ProtectedRoute allowedRoles={['checker']}><ProfilePage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/form/export'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <ExportsPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/form/data/:id' element={
+          <ProtectedRoute allowedRoles={['checker']}><FormUpdatePage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/users/me'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/form/schedule/:id' element={
+          <ProtectedRoute allowedRoles={['checker']}><FormByIdPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/form/data/:id'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <FormUpdatePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/schedules' element={
+          <ProtectedRoute allowedRoles={['checker']}><SchedulePage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/form/schedule/:id'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <FormByIdPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/schedules/timetable/:id' element={
+          <ProtectedRoute allowedRoles={['checker']}><ScheduleTimetablePage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/schedules'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <SchedulePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/admin/dashboard' element={
+          <ProtectedRoute allowedRoles={['admin']}><DashboardPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/schedules/timetable/:id'
-          element={
-            <ProtectedRoute allowedRoles={['checker']}>
-              <ScheduleTimetablePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/admin/dashboard/:id' element={
+          <ProtectedRoute allowedRoles={['admin']}><RecentFormByIdPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/admin/dashboard'
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/admin/dash' element={
+          <ProtectedRoute allowedRoles={['admin']}><Dash /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/admin/dashboard/:id'
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <RecentFormByIdPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/admin/overview' element={
+          <ProtectedRoute allowedRoles={['admin']}><OverviewPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/admin/dash'
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <Dash />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/admin/user-management' element={
+          <ProtectedRoute allowedRoles={['admin']}><UserManagementPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/admin/overview'
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <OverviewPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/admin/reports' element={
+          <ProtectedRoute allowedRoles={['admin']}><ReportsPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/admin/user-management'
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <UserManagementPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path='/admin/schedules' element={
+          <ProtectedRoute allowedRoles={['admin']}><ScheduleManagementPage /></ProtectedRoute>
+        } />
 
-        <Route
-          path='/admin/reports'
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <ReportsPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path='/admin/schedules'
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <ScheduleManagementPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path='*'
-          element={
-            <NotFoundPage />
-          }
-        />
+        <Route path='*' element={<NotFoundPage />} />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

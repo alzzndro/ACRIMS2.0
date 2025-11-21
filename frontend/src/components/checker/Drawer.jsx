@@ -15,7 +15,7 @@ const Drawer = (props) => {
                 <button
                     onClick={props.btnClck}
                     aria-label="Close drawer"
-                    className="text-[#ff2e2e] hover:text-red-500 text-3xl font-bold focus:outline-none transition-colors"
+                    className="text-[#ff2e2e] hover:text-red-500 text-3xl font-bold focus:outline-none transition-colors bg-white w-8 h-8 flex justify-center items-center rounded-lg"
                 >
                     &times;
                 </button>
@@ -24,22 +24,27 @@ const Drawer = (props) => {
             {/* Menu Items */}
             <ul className="flex flex-col gap-4 text-white font-semibold text-lg">
                 <Link to="/users/me" onClick={props.btnClck}>
-                    <li className="px-4 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
+                    <li className="px-4 bg-amber-900 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
                         Profile
                     </li>
                 </Link>
                 <Link to="/form/pending" onClick={props.btnClck}>
-                    <li className="px-4 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
+                    <li className="px-4 bg-amber-900 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
                         Pending Forms
                     </li>
                 </Link>
                 <Link to="/form/export" onClick={props.btnClck}>
-                    <li className="px-4 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
+                    <li className="px-4 bg-amber-900 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
                         Export to CSV
                     </li>
                 </Link>
+                <Link to="/form/export" onClick={props.btnClck}>
+                    <li className="px-4 bg-amber-900 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
+                        History
+                    </li>
+                </Link>
                 <Link to="/logout" onClick={props.btnClck}>
-                    <li className="px-4 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
+                    <li className="px-4 bg-amber-900 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
                         Logout
                     </li>
                 </Link>

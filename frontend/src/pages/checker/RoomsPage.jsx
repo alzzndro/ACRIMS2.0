@@ -13,7 +13,9 @@ const RoomsPage = () => {
     const [searchQuery, setSearchQuery] = useState("");  // To store the search query
     const [floorFilter, setFloorFilter] = useState("");  // To store the selected floor filter
     const [modalSchedule, setModalSchedule] = useState(true);
+
     const navigate = useNavigate();
+
     const CACHE_KEY = "schedule-cache";
     const CACHE_EXPIRATION = 1000 * 60 * 10; // 10 minutes
 

@@ -8,13 +8,18 @@ const ExportsPage = () => {
     const [startDate, setStartDate] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const toUpperName = (name) => name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
+    // NEW: filter state
+    const [filterType, setFilterType] = useState("none");
+
+    const toUpperName = (name) =>
+        name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "";
+
     const truthyPresence = (val) => val === 1 || val === true;
 
     const to12Hour = (time) => {
         if (!time) return "";
         const date = new Date(`1970-01-01T${time}`);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     };
 
     const exportToCSV = (data, filename) => {
@@ -22,20 +27,22 @@ const ExportsPage = () => {
 
         const headers = Object.keys(data[0]);
         const csvContent = [
-            headers.join(','),
-            ...data.map(row =>
-                headers.map(header => {
-                    const value = row[header];
-                    return typeof value === 'string' && value.includes(',')
-                        ? `"${value.replace(/"/g, '""')}"`
-                        : value;
-                }).join(',')
-            )
-        ].join('\n');
+            headers.join(","),
+            ...data.map((row) =>
+                headers
+                    .map((header) => {
+                        const value = row[header];
+                        return typeof value === "string" && value.includes(",")
+                            ? `"${value.replace(/"/g, '""')}"`
+                            : value;
+                    })
+                    .join(",")
+            ),
+        ].join("\n");
 
-        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const blob = new Blob([csvContent], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
         document.body.appendChild(a);
@@ -66,7 +73,9 @@ const ExportsPage = () => {
                 `${import.meta.env.VITE_API_URL}/form/checker`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            const forms = Array.isArray(formsRes.data) ? formsRes.data : [formsRes.data];
+            const forms = Array.isArray(formsRes.data)
+                ? formsRes.data
+                : [formsRes.data];
 
             // Fetch all users
             const usersRes = await axios.get(
@@ -75,30 +84,50 @@ const ExportsPage = () => {
             );
             const users = usersRes.data ?? [];
 
-            // Frontend filter by date
-            const filteredForms = forms.filter(form => {
+            // Filter by date FIRST
+            const filteredForms = forms.filter((form) => {
                 const formDate = new Date(form.date_monitored);
                 return formDate >= startDate && formDate <= endDate;
             });
 
-            if (!filteredForms.length) {
-                alert("No records match your selected date range.");
+            // NEW: FILTER BY STATUS (present / late / absent / none)
+            let filteredByStatus = filteredForms;
+
+            if (filterType === "present") {
+                filteredByStatus = filteredForms.filter((f) =>
+                    truthyPresence(f.instructor_presence)
+                );
+            } else if (filterType === "late") {
+                filteredByStatus = filteredForms.filter((f) =>
+                    truthyPresence(f.is_late)
+                );
+            } else if (filterType === "absent") {
+                filteredByStatus = filteredForms.filter(
+                    (f) => !truthyPresence(f.instructor_presence)
+                );
+            }
+            // filterType === "none" → no extra filtering
+
+            if (!filteredByStatus.length) {
+                alert("No records match your selected filters.");
                 return;
             }
 
             // Join forms with checker names
-            const joinedData = filteredForms.map(form => {
-                const user = users.find(u => u.user_id === form.checker_id);
+            const joinedData = filteredByStatus.map((form) => {
+                const user = users.find((u) => u.user_id === form.checker_id);
                 return {
                     ...form,
                     checker_name: user
-                        ? `${toUpperName(user.first_name)} ${toUpperName(user.last_name)}`
-                        : ""
+                        ? `${toUpperName(user.first_name)} ${toUpperName(
+                            user.last_name
+                        )}`
+                        : "",
                 };
             });
 
             // Prepare export format
-            const exportData = joinedData.map(form => ({
+            const exportData = joinedData.map((form) => ({
                 Date: form.date_monitored,
                 Time: to12Hour(form.time_monitored),
                 Room: form.room_number,
@@ -107,11 +136,10 @@ const ExportsPage = () => {
                 Present: truthyPresence(form.instructor_presence) ? "Yes" : "No",
                 Late: truthyPresence(form.is_late) ? "Yes" : "No",
                 Remarks: form.remarks || "",
-                "Checker Name": form.checker_name
+                "Checker Name": form.checker_name,
             }));
 
-            exportToCSV(exportData, "acrims_report");
-
+            exportToCSV(exportData, "acrims_monthly_report");
         } catch (err) {
             console.log("Export error:", err);
             alert("Error exporting data.");
@@ -123,10 +151,13 @@ const ExportsPage = () => {
     return (
         <>
             <NavBarTwo />
+
             <div className="p-8 max-w-md mx-auto">
                 <h1 className="text-2xl font-bold mb-6">Export ACRIMS Report</h1>
 
-                <label className="block text-sm font-semibold mb-2">Start Date</label>
+                <label className="block text-sm font-semibold mb-2">
+                    Start Date
+                </label>
                 <DatePicker
                     selected={startDate}
                     onChange={setStartDate}
@@ -134,6 +165,58 @@ const ExportsPage = () => {
                     placeholderText="Select start date"
                     className="border p-2 w-full rounded mb-6"
                 />
+
+                {/* Radio Filters */}
+                <div className="mb-6">
+                    <h1 className="font-semibold mb-2">Filter by:</h1>
+
+                    <div className="flex flex-col gap-2">
+
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                name="filterType"
+                                value="present"
+                                checked={filterType === "present"}
+                                onChange={() => setFilterType("present")}
+                            />
+                            Present
+                        </label>
+
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                name="filterType"
+                                value="late"
+                                checked={filterType === "late"}
+                                onChange={() => setFilterType("late")}
+                            />
+                            Late
+                        </label>
+
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                name="filterType"
+                                value="absent"
+                                checked={filterType === "absent"}
+                                onChange={() => setFilterType("absent")}
+                            />
+                            Absent
+                        </label>
+
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                name="filterType"
+                                value="none"
+                                checked={filterType === "none"}
+                                onChange={() => setFilterType("none")}
+                            />
+                            None
+                        </label>
+                    </div>
+                </div>
 
                 <button
                     onClick={handleExport}

@@ -1,9 +1,10 @@
-import { IoMenu, IoNotifications } from "react-icons/io5";
+import { IoMenu } from "react-icons/io5";
 import '../../assets/css/common/variables.css';
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import Drawer from "./Drawer";
 import { IoArrowBack } from 'react-icons/io5';
+import { LuDownload } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 
 const NavBarOne = (props) => {
@@ -22,9 +23,9 @@ const NavBarOne = (props) => {
                 <button onClick={handleBackArrow} className={`h-full ${props.visibility} w-12 flex justify-center items-center rounded-2xl focus:bg-gray-500 focus:text-red-200`}>
                     <IoArrowBack size={30} className="text-white" />
                 </button>
-                <div className="flex flex-row">
+                <div className="flex flex-row gap-4">
                     <button className="h-full w-12 flex justify-center items-center rounded-2xl focus:bg-gray-500 focus:text-red-200">
-                        <IoNotifications size={25} className="text-white" />
+                        <LuDownload size={25} className="text-white" />
                     </button>
                     <button
                         onClick={() => setIsOpen(true)}
