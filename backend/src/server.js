@@ -5,7 +5,7 @@ import { app } from './app.js'
 import { db } from './config/db.js'
 
 // ---------------------- USE PORT FROM .ENV FILE ----------------------
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3002;
 
 // ---------------------- ENSURING DB CONNECTION ----------------------
 // ---------------------- STARTING THE SERVER ----------------------
