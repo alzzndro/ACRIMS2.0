@@ -6,40 +6,40 @@ import Logo from '../../assets/images/logo.png';
 import RedBox from '../../components/designs/RedBox';
 import BlueBox from '../../components/designs/BlueBox';
 import BlueSingleBox from '../../components/designs/BlueSingleBox';
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 
 const LoginPage = () => {
+    const navigate = useNavigate();
+
     const invalidNotify = () => {
         toast.error('Invalid Credentials', {
-            position: "top-center",
+            position: 'top-center',
             autoClose: 5000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
-            theme: "light",
+            theme: 'light',
         });
-    }
+    };
 
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-    })
-    const navigate = useNavigate()
+        remember: false,
+    });
 
     const handleChange = (e) => {
-        const { name, value } = e.target
-
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }))
-    }
+        const { name, value, type, checked } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value,
+        }));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -47,104 +47,122 @@ const LoginPage = () => {
             const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/user/login`, {
                 email: formData.email,
                 password: formData.password,
-            })
+            });
 
-            // destructure from data
             const { success, message, token, user } = data;
-
-            if (!success) {
-                invalidNotify();
-                return;
-            }
+            if (!success) return invalidNotify();
 
             console.log(message);
 
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
 
-            if (user.role === "admin") {
-                navigate('/admin/dashboard');
-            } else if (user.role === "checker") {
-                navigate('/home');
+            if (formData.remember) {
+                localStorage.setItem('rememberMe', 'true');
+                localStorage.setItem('savedEmail', formData.email);
+                localStorage.setItem('savedPassword', formData.password);
             } else {
-                invalidNotify();
-                return;
+                localStorage.removeItem('rememberMe');
+                localStorage.removeItem('savedEmail');
+                localStorage.removeItem('savedPassword');
             }
+
+            if (user.role === 'admin') navigate('/admin/dashboard');
+            else if (user.role === 'checker') navigate('/home');
+            else invalidNotify();
         } catch (error) {
-            console.log(error);
+            console.error(error);
             invalidNotify();
         }
     };
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        const user = localStorage.getItem("user");
-        const parsedUser = JSON.parse(user);
-
-        if (token && user) {
-            if (parsedUser.role === "admin") {
-                navigate('/admin/dashboard');
-            } else if (parsedUser.role === "checker") {
-                navigate('/home');
-            } else {
-                return;
-            }
+        const remember = localStorage.getItem('rememberMe');
+        if (remember === 'true') {
+            setFormData((prev) => ({
+                ...prev,
+                email: localStorage.getItem('savedEmail') || '',
+                password: localStorage.getItem('savedPassword') || '',
+                remember: true,
+            }));
         }
-    }, [navigate])
+    }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const user = localStorage.getItem('user');
+        const parsedUser = user ? JSON.parse(user) : null;
+        const remember = localStorage.getItem('rememberMe');
+
+        if (token && parsedUser && remember === 'true') {
+            if (parsedUser.role === 'admin') navigate('/admin/dashboard');
+            else if (parsedUser.role === 'checker') navigate('/home');
+        }
+    }, [navigate]);
 
     return (
         <>
-            <div className='relative overflow-hidden'>
-                {/* Navbar */}
+            <div className="relative overflow-hidden">
                 <NavBarBurger />
-                <div className='w-full h-[calc(100svh-3.75rem)] @container/Login'>
-                    {/* Image of Asian College Logo */}
-                    <div className='flex justify-center md:px-20 md:justify-start lg:absolute lg:bottom-1/2 lg:right-1/2'>
-                        <img src={LogoAc} className='h-28 md:h-38 lg:h-42' alt="" />
+                <div className="w-full h-[calc(100svh-3.75rem)] @container/Login">
+                    <div className="flex justify-center md:px-20 md:justify-start lg:absolute lg:bottom-1/2 lg:right-1/2">
+                        <img src={LogoAc} className="h-28 md:h-38 lg:h-42" alt="" />
                     </div>
-                    {/* Form Container */}
+
                     <div className="h-[calc(100svh-12rem)] px-5 flex justify-center items-center lg:justify-end lg:items-center lg:px-30">
-                        {/* Form */}
-                        <form onSubmit={handleSubmit} className='z-10'>
-                            <fieldset className='flex items-center flex-col pb-5 pt-5 px-5 rounded-2xl bg-white h-fit md:p-10 md:w-3/5 lg:w-[25rem] shadow-2xl @[414px]/Login:w-80'>
-                                {/* App Logo */}
-                                <img src={Logo} className='h-24 md:h-30' alt="" />
-                                {/* Inputs */}
-                                <div className='mt-5 w-full flex flex-col gap-5 md:gap-8'>
+                        <form onSubmit={handleSubmit} className="z-10 rounded-2xl shadow-md">
+                            <fieldset className="flex items-center flex-col pb-5 pt-5 px-5 rounded-2xl bg-white h-fit md:p-10 md:w-3/5 lg:w-[25rem] shadow-2xl @[414px]/Login:w-80">
+                                <img src={Logo} className="h-24 md:h-30" alt="" />
+
+                                <div className="mt-5 w-full flex flex-col gap-4 md:gap-4">
                                     <input
                                         type="email"
-                                        name='email'
-                                        id='email'
-                                        required placeholder='Email'
-                                        className='input bg-gray-100 px-4 w-full h-12'
+                                        name="email"
+                                        id="email"
+                                        required
+                                        placeholder="Email"
+                                        className="input bg-gray-100 px-4 w-full h-12"
                                         value={formData.email}
                                         autoComplete="email"
                                         onChange={handleChange}
                                     />
+
                                     <input
                                         type="password"
-                                        name='password'
-                                        id='password'
-                                        required placeholder='Password'
-                                        className='input bg-gray-100 px-4 w-full h-12 rounded-4xl'
+                                        name="password"
+                                        id="password"
+                                        required
+                                        placeholder="Password"
+                                        className="input bg-gray-100 px-4 w-full h-12 rounded-4xl"
                                         value={formData.password}
                                         autoComplete="current-password"
                                         onChange={handleChange}
                                     />
+
+                                    <div className="flex flex-row gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="remember"
+                                            name="remember"
+                                            checked={formData.remember}
+                                            onChange={handleChange}
+                                        />
+                                        <label htmlFor="remember">Remember Me</label>
+                                    </div>
                                 </div>
+
                                 <input
                                     type="submit"
-                                    name='submit'
-                                    id='submit'
-                                    value='LOGIN'
-                                    className='bg-[var(--blue-logo)] z-10 text-white mt-5 md:mt-8 w-full h-12 font-bold rounded-4xl lg:hover:scale-110 cursor-pointer'
+                                    name="submit"
+                                    id="submit"
+                                    value="LOGIN"
+                                    className="bg-[var(--blue-logo)] z-10 text-white mt-5 md:mt-8 w-full h-12 font-bold rounded-lg lg:hover:scale-110 cursor-pointer"
                                 />
                             </fieldset>
                         </form>
                     </div>
                 </div>
 
-                {/* Designs Square Box */}
                 <div className="redbox block md:hidden absolute top-0 left-[-8rem] rotate-45">
                     <RedBox className={'h-40'} />
                 </div>
@@ -159,7 +177,6 @@ const LoginPage = () => {
                 </div>
             </div>
 
-            {/* Toast Container */}
             <ToastContainer
                 position="top-center"
                 autoClose={5000}
@@ -173,7 +190,7 @@ const LoginPage = () => {
                 theme="light"
             />
         </>
-    )
-}
+    );
+};
 
-export default LoginPage
+export default LoginPage;

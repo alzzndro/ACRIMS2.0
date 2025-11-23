@@ -97,7 +97,7 @@ const HomePage = () => {
 
     useEffect(() => {
         if (data.length === 0) {
-            console.warn("No schedules available.");
+            return;
         }
     }, [data]);
 
@@ -128,11 +128,11 @@ const HomePage = () => {
                 <div className='p-5 flex flex-wrap gap-5 justify-center @[414px]/Home:gap-10 rounded-2xl bg-white mt-[-1rem]'>
                     <Link to="/rooms" className='w-36 aspect-square bg-[var(--bg-gray)] shadow-lg rounded-2xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
                         <FaDoorClosed size={50} />
-                        <p className=''>Rooms</p>
+                        <p className=''>Room Check</p>
                     </Link>
                     <Link to="/form/new" className='w-36 aspect-square bg-[var(--bg-gray)] shadow-lg rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
                         <FaRegSquarePlus size={50} />
-                        <p className=''>Form</p>
+                        <p className=''>Add Form</p>
                     </Link>
                     <Link to="/schedules" className='w-36 aspect-square bg-[var(--bg-gray)] shadow-lg rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
                         <FaCalendarAlt size={50} />
@@ -140,7 +140,7 @@ const HomePage = () => {
                     </Link>
                     <Link to="/mylist" className='w-36 aspect-square bg-[var(--bg-gray)] shadow-lg rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
                         <CiViewList size={50} />
-                        <p className=''>List</p>
+                        <p className=''>My Forms</p>
                     </Link>
 
                     {/* Designs */}

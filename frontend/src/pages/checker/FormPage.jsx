@@ -53,6 +53,7 @@ const FormPage = () => {
         instructor_name: '',
         instructor_email: '',
         instructor_presence: false,
+        room_change: false,
         is_late: false,
         remarks: '',
         schedule_time: '',
@@ -169,51 +170,8 @@ const FormPage = () => {
                 const expired = Date.now() - cached.timestamp > CACHE_EXPIRATION;
                 if (!expired) return; // cache valid, skip API
             }
-
-            // Getting token
-            const token = localStorage.getItem("token");
-            if (!token) {
-                alert("You need to log in first!");
-                return;
-            }
-
-            // Fetch fresh data from API
-            const [jsonResponse, mysqlResponse] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }).catch(() => ({ data: { files: [] } })), // fallback
-
-                axios.get(`${import.meta.env.VITE_API_URL}/schedules/current`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }).catch(() => ({ data: { schedules: [] } })) // fallback
-            ]);
-
-            const jsonSchedules = (jsonResponse.data.files || []).flatMap(file =>
-                (file.schedules || []).map(schedule => ({
-                    ...schedule,
-                    source: 'json',
-                    source_file: file.filename
-                }))
-            );
-
-            const mysqlSchedules = (mysqlResponse.data.schedules || []).map(schedule => ({
-                ...schedule,
-                source: 'mysql'
-            }));
-
-            const allSchedules = [...jsonSchedules, ...mysqlSchedules];
-
-            // Save fresh data to cache
-            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: allSchedules });
-            console.log("schedule cached");
-
-
-            setData(allSchedules);
-
-            console.log("Total schedules loaded:", allSchedules.length);
-
         } catch (error) {
-            console.log("Error fetching schedules:", error);
+            console.log("No cached schedule data", error);
             setData([]); // fallback empty array
         }
     };
@@ -222,13 +180,10 @@ const FormPage = () => {
         fetchData();
     }, [])
 
-    useEffect(() => {
-        if (data.length === 0) {
-            console.warn("No schedules available.");
-        } else {
-            console.log("data detected");
-        }
-    }, [data]);
+    // For viewing formData before submission / dev helper
+    // useEffect(() => {
+    //     console.log(formData);
+    // }, [formData])
 
     // Validate start & end time difference
     useEffect(() => {
@@ -280,7 +235,7 @@ const FormPage = () => {
 
     return (
         <>
-            <NavBarTwo message="Form" />
+            <NavBarTwo message="Manual Form" />
             <div className="max-w-2xl mx-auto bg-white px-5 pt-6 pb-8">
                 <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -305,6 +260,21 @@ const FormPage = () => {
                                 <option key={index} value={room} />
                             ))}
                         </datalist>
+                    </div>
+
+                    {/* Room Change */}
+                    <div className="">
+                        <label className="block text-md font-medium text-gray-700">Room Change</label>
+                        <div className="flex flex-row gap-3">
+                            <input
+                                type="checkbox"
+                                name="room_change"
+                                checked={formData.room_change}
+                                onChange={handleChange}
+                                className="mr-2"
+                            />
+                            <span className="text-sm text-gray-600">Check this if the instructor change rooms.</span>
+                        </div>
                     </div>
 
                     {/* Instructor Name */}
