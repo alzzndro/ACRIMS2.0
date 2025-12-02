@@ -84,13 +84,13 @@ const ExportsPage = () => {
             );
             const users = usersRes.data ?? [];
 
-            // Filter by date FIRST
+            // 1️⃣ Filter by date
             const filteredForms = forms.filter((form) => {
                 const formDate = new Date(form.date_monitored);
                 return formDate >= startDate && formDate <= endDate;
             });
 
-            // NEW: FILTER BY STATUS (present / late / absent / none)
+            // 2️⃣ Filter by status
             let filteredByStatus = filteredForms;
 
             if (filterType === "present") {
@@ -105,15 +105,19 @@ const ExportsPage = () => {
                 filteredByStatus = filteredForms.filter(
                     (f) => !truthyPresence(f.instructor_presence)
                 );
+            } else if (filterType === "changed") {
+                filteredByStatus = filteredForms.filter((f) =>
+                    truthyPresence(f.changed_rooms)
+                );
             }
-            // filterType === "none" → no extra filtering
+            // filterType === "none" → no filter
 
             if (!filteredByStatus.length) {
                 alert("No records match your selected filters.");
                 return;
             }
 
-            // Join forms with checker names
+            // 3️⃣ Join forms with checker names
             const joinedData = filteredByStatus.map((form) => {
                 const user = users.find((u) => u.user_id === form.checker_id);
                 return {
@@ -126,7 +130,7 @@ const ExportsPage = () => {
                 };
             });
 
-            // Prepare export format
+            // 4️⃣ Prepare CSV data
             const exportData = joinedData.map((form) => ({
                 Date: form.date_monitored,
                 Time: to12Hour(form.time_monitored),
@@ -135,8 +139,9 @@ const ExportsPage = () => {
                 Schedule_Time: form.schedule_time,
                 Present: truthyPresence(form.instructor_presence) ? "Yes" : "No",
                 Late: truthyPresence(form.is_late) ? "Yes" : "No",
+                Changed_Rooms: truthyPresence(form.changed_rooms) ? "Yes" : "No",
                 Remarks: form.remarks || "",
-                "Checker Name": form.checker_name,
+                Checker_Name: form.checker_name,
             }));
 
             exportToCSV(exportData, "acrims_monthly_report");
@@ -171,7 +176,6 @@ const ExportsPage = () => {
                     <h1 className="font-semibold mb-2">Filter by:</h1>
 
                     <div className="flex flex-col gap-2">
-
                         <label className="flex items-center gap-2">
                             <input
                                 type="radio"
@@ -203,6 +207,18 @@ const ExportsPage = () => {
                                 onChange={() => setFilterType("absent")}
                             />
                             Absent
+                        </label>
+
+                        {/* ✅ NEW FILTER OPTION */}
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                name="filterType"
+                                value="changed"
+                                checked={filterType === "changed"}
+                                onChange={() => setFilterType("changed")}
+                            />
+                            Changed Rooms
                         </label>
 
                         <label className="flex items-center gap-2">

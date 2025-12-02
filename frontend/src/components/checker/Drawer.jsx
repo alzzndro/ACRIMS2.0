@@ -38,11 +38,11 @@ const Drawer = (props) => {
                         Export to CSV
                     </li>
                 </Link>
-                <Link to="/form/export" onClick={props.btnClck}>
+                {/* <Link to="/form/export" onClick={props.btnClck}>
                     <li className="px-4 bg-amber-900 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
                         History
                     </li>
-                </Link>
+                </Link> */}
                 <Link to="/logout" onClick={props.btnClck}>
                     <li className="px-4 bg-amber-900 py-3 rounded-lg cursor-pointer hover:bg-[#ff2e2e] hover:text-white transition-colors">
                         Logout

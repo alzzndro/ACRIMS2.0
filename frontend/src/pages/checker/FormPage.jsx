@@ -53,7 +53,7 @@ const FormPage = () => {
         instructor_name: '',
         instructor_email: '',
         instructor_presence: false,
-        room_change: false,
+        changed_rooms: false,
         is_late: false,
         remarks: '',
         schedule_time: '',
@@ -268,8 +268,8 @@ const FormPage = () => {
                         <div className="flex flex-row gap-3">
                             <input
                                 type="checkbox"
-                                name="room_change"
-                                checked={formData.room_change}
+                                name="changed_rooms"
+                                checked={formData.changed_rooms}
                                 onChange={handleChange}
                                 className="mr-2"
                             />

@@ -104,6 +104,26 @@ const FormUpdatePage = () => {
                     />
                 </div>
 
+                {/* Room change */}
+                <div className="mb-4">
+                    <label className="block mb-1">Changed Rooms?</label>
+                    <div className="flex flex-row gap-3">
+                        <input
+                            type="checkbox"
+                            checked={form.changed_rooms === 1}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    changed_rooms: e.target.checked ? 1 : 0,
+                                })
+                            }
+                            className="border px-2 py-1 rounded"
+                        />
+
+                        <span className="text-sm text-gray-600">Please mark this <i>"checked"</i> if the instructor <b>changed rooms.</b></span>
+                    </div>
+                </div>
+
                 {/* Instructor Presence */}
                 <div className="mb-4">
                     <label className="block mb-1">Instructor Presence</label>
@@ -120,7 +140,7 @@ const FormUpdatePage = () => {
                             className="border px-2 py-1 rounded"
                         />
 
-                        <span className="text-sm text-gray-600">Please mark this <i>"checked"</i> if the instructor is present.</span>
+                        <span className="text-sm text-gray-600">Please mark this <i>"checked"</i> if the instructor is <b>present.</b></span>
                     </div>
                 </div>
 

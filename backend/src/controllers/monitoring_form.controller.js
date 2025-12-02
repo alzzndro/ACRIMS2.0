@@ -35,24 +35,32 @@ export async function addForm(req, res) {
             is_late,
             remarks,
             schedule_time,
-            photo,
-            checker_id
-        } = req.body
+            changed_rooms
+        } = req.body;
 
-        const isPresent = instructor_presence === "1" || instructor_presence === "true";
-        // const isLate = is_late === "1" || is_late === "true";
+        // Normalize boolean fields
+        const presenceValue = instructor_presence === "true" || instructor_presence === "1" ? 1 : 0;
+        const lateValue = is_late === "true" || is_late === "1" ? 1 : 0;
+        const changedRoomsValue = changed_rooms === "true" || changed_rooms === "1" ? 1 : 0;
 
+        // File upload path
         const photoPath = req.file ? `/uploads/${req.file.filename}` : null;
 
+        // Insert into DB
         await service.addForm({
-            ...req.body,
-            instructor_presence: req.body.instructor_presence === "true" ? 1 : 0,
-            is_late: req.body.is_late === "true" ? 1 : 0,
+            room_number,
+            instructor_name,
+            instructor_presence: presenceValue,
+            is_late: lateValue,
+            remarks,
+            schedule_time,
             photo: photoPath,
-            checker_id: req.user.id,
-        })
+            checker_id: req.user.id, // always trust JWT, NOT client body
+            changed_rooms: changedRoomsValue
+        });
 
-        if (!isPresent && instructor_email) {
+        // If instructor absent, email them
+        if (!presenceValue && instructor_email) {
             await mailer.sendEmailAbsent(instructor_email);
             return res.status(201).json({
                 success: true,
@@ -60,12 +68,17 @@ export async function addForm(req, res) {
             });
         }
 
-        res.status(201).json({ success: true, message: "Form added successfully" });
+        return res.status(201).json({
+            success: true,
+            message: "Form added successfully!",
+        });
+
     } catch (error) {
         console.error("Error in controller:", error);
         res.status(500).json({ success: false, message: "Server error" });
     }
 }
+
 
 // GET form by id
 export async function getFormById(req, res) {

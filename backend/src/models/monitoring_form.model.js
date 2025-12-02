@@ -33,24 +33,37 @@ export async function addForm(data) {
     try {
         const [result] = await db.query(
             `INSERT INTO monitoring_form (
-            date_monitored,
-            time_monitored,
-            room_number,
-            instructor_name,
-            instructor_presence,
-            is_late,
-            remarks,
-            schedule_time,
-            photo,
-            checker_id
-        ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [data.room_number, data.instructor_name, data.instructor_presence, data.is_late, data.remarks || null, data.schedule_time || null, data.photo || null, data.checker_id || null]
+                date_monitored,
+                time_monitored,
+                room_number,
+                instructor_name,
+                instructor_presence,
+                is_late,
+                remarks,
+                schedule_time,
+                photo,
+                checker_id,
+                changed_rooms
+            ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                data.room_number,
+                data.instructor_name,
+                data.instructor_presence,
+                data.is_late,
+                data.remarks || null,
+                data.schedule_time || null,
+                data.photo || null,
+                data.checker_id || null,
+                data.changed_rooms || 0
+            ]
         );
+
         return result.insertId;
     } catch (error) {
         console.log("Error in model: ", error.message);
     }
 };
+
 
 export async function updateForm(data, id) {
     const [result] = await db.query(
