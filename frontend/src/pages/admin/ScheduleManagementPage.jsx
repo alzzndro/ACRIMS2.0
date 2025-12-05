@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-    Calendar, Plus, Edit, Trash2, Search, Filter, Clock, MapPin,
-    User, BookOpen, X, AlertTriangle, Mail, Upload, FileText,
-    Download, FolderOpen, Trash
+    Calendar, Search, Filter, Clock, MapPin,
+    User, BookOpen, X, Mail, Upload, FileText,
+    Trash
 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import adminService from '../../services/adminService';
@@ -11,10 +11,6 @@ const NEON = '#00B4FF';
 const LIME = '#A8FF4A';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => {
-    const hour = 7 + i; // 7 AM to 9 PM
-    return `${hour.toString().padStart(2, '0')}:00:00`;
-});
 
 export default function ScheduleManagementPage() {
     const [schedules, setSchedules] = useState([]);
@@ -25,33 +21,13 @@ export default function ScheduleManagementPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [dayFilter, setDayFilter] = useState('all');
     const [roomFilter, setRoomFilter] = useState('all');
-    const [dataSource, setDataSource] = useState('all'); // 'all', 'mysql', 'json'
 
-    // Modals
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    // Modals (Only File Management left)
     const [showJsonModal, setShowJsonModal] = useState(false);
     const [showUploadModal, setShowUploadModal] = useState(false);
 
-    // Form states
-    const [editingSchedule, setEditingSchedule] = useState(null);
-    const [deletingSchedule, setDeletingSchedule] = useState(null);
-    const [newSchedule, setNewSchedule] = useState({
-        room_id: '',
-        room_name: '',
-        day: 'Monday',
-        start_time: '08:00:00',
-        end_time: '09:30:00',
-        subject: '',
-        section: '',
-        instructor: '',
-        instructor_email: '',
-        floor: 'first'
-    });
+    // Form states (Only Upload left)
     const [uploadFile, setUploadFile] = useState(null);
-
-    //     const isDark = false; // Admin side is always light theme
 
     useEffect(() => {
         fetchData();
@@ -77,12 +53,8 @@ export default function ScheduleManagementPage() {
             filtered = filtered.filter(schedule => schedule.room_id === roomFilter);
         }
 
-        if (dataSource !== 'all') {
-            filtered = filtered.filter(schedule => schedule.source === dataSource);
-        }
-
         setFilteredSchedules(filtered);
-    }, [schedules, searchQuery, dayFilter, roomFilter, dataSource]);
+    }, [schedules, searchQuery, dayFilter, roomFilter]);
 
     useEffect(() => {
         filterSchedules();
@@ -92,17 +64,8 @@ export default function ScheduleManagementPage() {
         setLoading(true);
         setError(null);
         try {
-            // Fetch both MySQL and JSON schedules
-            const [mysqlData, jsonData] = await Promise.all([
-                adminService.getAllSchedules().catch(() => ({ schedules: [] })),
-                adminService.getScheduleFiles().catch(() => ({ files: [] }))
-            ]);
-
-            // Process MySQL schedules
-            const mysqlSchedules = (mysqlData.schedules || []).map(schedule => ({
-                ...schedule,
-                source: 'mysql'
-            }));
+            // Fetch Only JSON files
+            const jsonData = await adminService.getScheduleFiles().catch(() => ({ files: [] }));
 
             // Process JSON schedules
             const jsonSchedules = (jsonData.files || []).flatMap(file =>
@@ -113,9 +76,7 @@ export default function ScheduleManagementPage() {
                 }))
             );
 
-            // Combine both sources
-            const allSchedules = [...mysqlSchedules, ...jsonSchedules];
-            setSchedules(allSchedules);
+            setSchedules(jsonSchedules);
             setJsonFiles(jsonData.files || []);
         } catch (err) {
             console.error('Failed to fetch schedule data:', err);
@@ -124,76 +85,6 @@ export default function ScheduleManagementPage() {
             setJsonFiles([]);
         } finally {
             setLoading(false);
-        }
-    }
-
-    async function handleAddSchedule() {
-        if (!newSchedule.room_id || !newSchedule.subject || !newSchedule.instructor) {
-            alert('Please fill in all required fields');
-            return;
-        }
-
-        try {
-            await adminService.createSchedule(newSchedule);
-            setShowAddModal(false);
-            setNewSchedule({
-                room_id: '',
-                room_name: '',
-                day: 'Monday',
-                start_time: '08:00:00',
-                end_time: '09:30:00',
-                subject: '',
-                section: '',
-                instructor: '',
-                instructor_email: '',
-                floor: 'first'
-            });
-            fetchData();
-        } catch (err) {
-            console.error('Error adding schedule:', err);
-            alert('Error adding schedule: ' + (err.response?.data?.message || err.message));
-        }
-    }
-
-    async function handleEditSchedule() {
-        if (!editingSchedule.room_id || !editingSchedule.subject || !editingSchedule.instructor) {
-            alert('Please fill in all required fields');
-            return;
-        }
-
-        // Only MySQL schedules can be edited
-        if (editingSchedule.source !== 'mysql') {
-            alert('JSON schedules are read-only. To modify, please update the JSON file and re-upload.');
-            setShowEditModal(false);
-            setEditingSchedule(null);
-            return;
-        }
-
-        try {
-            await adminService.updateSchedule(editingSchedule.id, editingSchedule);
-            setShowEditModal(false);
-            setEditingSchedule(null);
-            fetchData();
-        } catch (err) {
-            console.error('Error updating schedule:', err);
-            alert('Error updating schedule: ' + (err.response?.data?.message || err.message));
-        }
-    }
-
-    async function handleDeleteSchedule() {
-        try {
-            // Only MySQL schedules can be deleted
-            if (deletingSchedule.source === 'mysql') {
-                await adminService.deleteSchedule(deletingSchedule.id);
-                setShowDeleteModal(false);
-                setDeletingSchedule(null);
-                fetchData();
-            } else {
-                alert('JSON schedules are read-only. To modify, please update the JSON file and re-upload.');
-            }
-        } catch (err) {
-            console.error('Error deleting schedule:', err);
-            alert('Error deleting schedule: ' + (err.response?.data?.message || err.message));
         }
     }
 
@@ -230,17 +121,6 @@ export default function ScheduleManagementPage() {
         }
     }
 
-    function getHourDifference(start, end) {
-        const [startHour, startMin] = start.split(':').map(Number);
-        const [endHour, endMin] = end.split(':').map(Number);
-        const startDate = new Date(0, 0, 0, startHour, startMin);
-        const endDate = new Date(0, 0, 0, endHour, endMin);
-
-        let diff = (endDate - startDate) / (1000 * 60 * 60); // in hours
-        if (diff < 0) diff += 24; // handle overnight times (optional)
-        return diff;
-    }
-
     // Get unique rooms for filter
     const rooms = [...new Set(schedules.map(s => s.room_id))].sort();
 
@@ -251,10 +131,10 @@ export default function ScheduleManagementPage() {
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-neon to-lime bg-clip-text text-black">
-                            Schedule Management
+                            Schedule File Management
                         </h1>
                         <p className="mt-2 text-gray-600">
-                            Manage class schedules in the database. JSON files are read-only for schedule data.
+                            Manage and view JSON schedule files.
                         </p>
                     </div>
 
@@ -273,18 +153,11 @@ export default function ScheduleManagementPage() {
                             <FileText size={20} />
                             Manage Files
                         </button>
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-black bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
-                        >
-                            <Plus size={20} />
-                            Add Schedule
-                        </button>
                     </div>
                 </div>
 
                 {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                         <input
@@ -318,16 +191,6 @@ export default function ScheduleManagementPage() {
                         ))}
                     </select>
 
-                    <select
-                        value={dataSource}
-                        onChange={(e) => setDataSource(e.target.value)}
-                        className="px-4 py-3 rounded-xl border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                    >
-                        <option value="all">All Sources</option>
-                        <option value="mysql">MySQL Only</option>
-                        <option value="json">JSON Only</option>
-                    </select>
-
                     <button
                         onClick={fetchData}
                         className="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors flex items-center justify-center gap-2"
@@ -338,7 +201,7 @@ export default function ScheduleManagementPage() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
@@ -368,23 +231,13 @@ export default function ScheduleManagementPage() {
                             <MapPin className="text-yellow-400" size={24} />
                         </div>
                     </div>
-
-                    <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-600">Filtered Results</p>
-                                <p className="text-2xl font-bold text-gray-900">{filteredSchedules.length}</p>
-                            </div>
-                            <Filter className="text-green-400" size={24} />
-                        </div>
-                    </div>
                 </div>
 
-                {/* JSON Files Management */}
+                {/* JSON Files List (Visible if files exist) */}
                 {jsonFiles.length > 0 && (
                     <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm mb-8">
                         <div className="p-6 border-b border-gray-200">
-                            <h2 className="text-lg font-semibold text-gray-900">JSON Schedule Files</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">Active JSON Files</h2>
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -415,7 +268,7 @@ export default function ScheduleManagementPage() {
                 <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
                     <div className="p-6 border-b border-gray-200">
                         <h2 className="text-lg font-semibold text-gray-900">
-                            Schedules ({filteredSchedules.length})
+                            Schedules View ({filteredSchedules.length})
                         </h2>
                     </div>
 
@@ -438,13 +291,12 @@ export default function ScheduleManagementPage() {
                                         <th className="text-left p-4 text-sm font-medium text-gray-600">Room</th>
                                         <th className="text-left p-4 text-sm font-medium text-gray-600">Subject</th>
                                         <th className="text-left p-4 text-sm font-medium text-gray-600">Instructor</th>
-                                        <th className="text-left p-4 text-sm font-medium text-gray-600">Source</th>
-                                        <th className="text-left p-4 text-sm font-medium text-gray-600">Actions</th>
+                                        <th className="text-left p-4 text-sm font-medium text-gray-600">File Source</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {filteredSchedules.map((schedule) => (
-                                        <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
+                                    {filteredSchedules.map((schedule, index) => (
+                                        <tr key={`${schedule.id}-${index}`} className="hover:bg-gray-50 transition-colors">
                                             <td className="p-4">
                                                 <div>
                                                     <p className="font-medium text-gray-900">{schedule.day}</p>
@@ -494,44 +346,9 @@ export default function ScheduleManagementPage() {
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${schedule.source === 'mysql'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-blue-100 text-blue-800'
-                                                    }`}>
-                                                    {schedule.source === 'mysql' ? 'MySQL' : schedule.source_file}
+                                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    {schedule.source_file}
                                                 </span>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    {schedule.source === 'mysql' ? (
-                                                        <>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setEditingSchedule({ ...schedule });
-                                                                    setShowEditModal(true);
-                                                                }}
-                                                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                                                title="Edit Schedule"
-                                                            >
-                                                                <Edit size={16} className="text-gray-500 hover:text-neon" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setDeletingSchedule(schedule);
-                                                                    setShowDeleteModal(true);
-                                                                }}
-                                                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                                                title="Delete Schedule"
-                                                            >
-                                                                <Trash2 size={16} className="text-red-400 hover:text-red-300" />
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-xs text-gray-500 italic">
-                                                            Read-only (JSON)
-                                                        </span>
-                                                    )}
-                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -547,409 +364,6 @@ export default function ScheduleManagementPage() {
                         </div>
                     )}
                 </div>
-
-                {/* Add Schedule Modal */}
-                {showAddModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-semibold text-gray-900">Add New Schedule</h3>
-                                <button
-                                    onClick={() => setShowAddModal(false)}
-                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Room ID *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newSchedule.room_id}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, room_id: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                        placeholder="e.g., 101"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Room Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newSchedule.room_name}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, room_name: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                        placeholder="e.g., 101 Classroom"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Day *
-                                    </label>
-                                    <select
-                                        value={newSchedule.day}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, day: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        {DAYS.map(day => (
-                                            <option key={day} value={day}>{day}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Floor
-                                    </label>
-                                    <select
-                                        value={newSchedule.floor}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, floor: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        <option value="first">First Floor</option>
-                                        <option value="second">Second Floor</option>
-                                        <option value="third">Third Floor</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Start Time *
-                                    </label>
-                                    <select
-                                        value={newSchedule.start_time}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, start_time: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        {TIME_SLOTS.map(time => (
-                                            <option key={time} value={time}>{time}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        End Time *
-                                    </label>
-                                    <select
-                                        value={newSchedule.end_time}
-                                        onChange={(e) => {
-                                            const endTime = e.target.value;
-                                            const startTime = newSchedule.start_time;
-
-                                            if (startTime) {
-                                                const diff = getHourDifference(startTime, endTime);
-                                                if (diff > 8) {
-                                                    alert("End time cannot be more than 8 hours after the start time.");
-                                                    return; // stop update
-                                                }
-                                            }
-
-                                            setNewSchedule({ ...newSchedule, end_time: endTime });
-                                        }}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        {TIME_SLOTS.map(time => (
-                                            <option key={time} value={time}>{time}</option>
-                                        ))}
-                                    </select>
-
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Subject *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newSchedule.subject}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, subject: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                        placeholder="e.g., Mathematics"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Section
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newSchedule.section}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, section: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                        placeholder="e.g., Grade 10-A"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Instructor *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newSchedule.instructor}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, instructor: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                        placeholder="e.g., Prof. Smith"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Instructor Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={newSchedule.instructor_email}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, instructor_email: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                        placeholder="e.g., smith@asiancollege.edu.ph"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 mt-6">
-                                <button
-                                    onClick={() => setShowAddModal(false)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleAddSchedule}
-                                    className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
-                                >
-                                    Add Schedule
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Edit Schedule Modal */}
-                {showEditModal && editingSchedule && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-semibold text-gray-900">Edit Schedule</h3>
-                                <button
-                                    onClick={() => setShowEditModal(false)}
-                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Room ID *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editingSchedule.room_id}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, room_id: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Room Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editingSchedule.room_name}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, room_name: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Day *
-                                    </label>
-                                    <select
-                                        value={editingSchedule.day}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, day: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        {DAYS.map(day => (
-                                            <option key={day} value={day}>{day}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Floor
-                                    </label>
-                                    <select
-                                        value={editingSchedule.floor}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, floor: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        <option value="first">First Floor</option>
-                                        <option value="second">Second Floor</option>
-                                        <option value="third">Third Floor</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Start Time *
-                                    </label>
-                                    <select
-                                        value={editingSchedule.start_time}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, start_time: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        {TIME_SLOTS.map(time => (
-                                            <option key={time} value={time}>{time}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        End Time *
-                                    </label>
-                                    <select
-                                        value={editingSchedule.end_time}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, end_time: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    >
-                                        {TIME_SLOTS.map(time => (
-                                            <option key={time} value={time}>{time}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Subject *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editingSchedule.subject}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, subject: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Section
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editingSchedule.section}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, section: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Instructor *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editingSchedule.instructor}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, instructor: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                                        Instructor Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={editingSchedule.instructor_email}
-                                        onChange={(e) => setEditingSchedule({ ...editingSchedule, instructor_email: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-neon/50 focus:outline-none bg-white"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 mt-6">
-                                <button
-                                    onClick={() => setShowEditModal(false)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleEditSchedule}
-                                    className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-neon to-lime text-black font-semibold hover:opacity-90 transition-opacity"
-                                >
-                                    Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Delete Confirmation Modal */}
-                {showDeleteModal && deletingSchedule && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-semibold text-red-600">Delete Schedule</h3>
-                                <button
-                                    onClick={() => setShowDeleteModal(false)}
-                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center gap-3 mb-4">
-                                <AlertTriangle className="text-red-400" size={24} />
-                                <p className="text-gray-700">
-                                    Are you sure you want to delete this schedule?
-                                </p>
-                            </div>
-
-                            <div className="p-4 rounded-lg bg-gray-100 mb-6">
-                                <p className="font-medium text-gray-900">
-                                    {deletingSchedule.subject} - {deletingSchedule.section}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                    {deletingSchedule.day} {deletingSchedule.start_time} - {deletingSchedule.end_time}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                    Room {deletingSchedule.room_id} • {deletingSchedule.instructor}
-                                </p>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowDeleteModal(false)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleDeleteSchedule}
-                                    className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition-colors font-semibold text-white"
-                                >
-                                    Delete Schedule
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* JSON File Management Modal */}
                 {showJsonModal && (

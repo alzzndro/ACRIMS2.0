@@ -58,7 +58,7 @@ const RoomsPage = () => {
     }
 
     // fetch data
-    const fetchData = async () => {
+    async function fetchData() {
         try {
             // 1️⃣ Try to load from cache first
             const cached = await localforage.getItem(CACHE_KEY);
@@ -68,22 +68,17 @@ const RoomsPage = () => {
                 if (!expired) return; // cache valid, skip API
             }
 
+            // Getting token
             const token = localStorage.getItem("token");
             if (!token) {
                 alert("You need to log in first!");
                 return;
             }
 
-            // 2️⃣ Fetch fresh data from API
-            const [jsonResponse, mysqlResponse] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }).catch(() => ({ data: { files: [] } })), // fallback
-
-                axios.get(`${import.meta.env.VITE_API_URL}/schedules/current`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }).catch(() => ({ data: { schedules: [] } })) // fallback
-            ]);
+            // Fetch fresh data from API (remove MySQL request)
+            const jsonResponse = await axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).catch(() => ({ data: { files: [] } })); // fallback
 
             const jsonSchedules = (jsonResponse.data.files || []).flatMap(file =>
                 (file.schedules || []).map(schedule => ({
@@ -93,21 +88,13 @@ const RoomsPage = () => {
                 }))
             );
 
-            const mysqlSchedules = (mysqlResponse.data.schedules || []).map(schedule => ({
-                ...schedule,
-                source: 'mysql'
-            }));
-
-            const allSchedules = [...jsonSchedules, ...mysqlSchedules];
-
-            // 3️⃣ Save fresh data to cache
-            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: allSchedules });
+            // Save fresh data to cache
+            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: jsonSchedules });
             console.log("schedule cached");
 
+            setData(jsonSchedules);
 
-            setData(allSchedules);
-
-            console.log("Total schedules loaded:", allSchedules.length);
+            console.log("Total schedules loaded:", jsonSchedules.length);
 
         } catch (error) {
             console.log("Error fetching schedules:", error);

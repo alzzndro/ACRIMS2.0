@@ -25,11 +25,6 @@ const FormPage = () => {
         toast.error("Invalid", {
             position: "top-center",
             autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
             theme: "light",
         });
     };
@@ -38,14 +33,10 @@ const FormPage = () => {
         toast.success('Form Added!', {
             position: "top-center",
             autoClose: 5000,
-            hideProgressBar: false,
             closeOnClick: false,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
             theme: "light",
         });
-    }
+    };
 
     // Payload Format
     const [formData, setFormData] = useState({
@@ -53,13 +44,14 @@ const FormPage = () => {
         instructor_name: '',
         instructor_email: '',
         instructor_presence: false,
-        changed_rooms: false,
+        changed_rooms: true,
         is_late: false,
+        hours_late: "",       // NEW
+        minutes_late: "",     // NEW
         remarks: '',
         schedule_time: '',
         photo: null,
     });
-
 
     // Handles
     const handleChange = (e) => {
@@ -91,11 +83,25 @@ const FormPage = () => {
 
         const combinedSchedule = `${to12HourV2(startTime)} - ${to12HourV2(endTime)}`;
 
+        // Compute lateness
+        let latenessValue = null;
+
+        if (formData.is_late) {
+            const hours = formData.hours_late !== "" ? formData.hours_late : 0;
+            const minutes = formData.minutes_late !== "" ? formData.minutes_late : 1; // DEFAULT = 1
+
+            latenessValue = `${hours} hour/s and ${minutes} minute/s`;
+        }
+
         const updatedFormData = {
             ...formData,
-            room_number: formData.room_number,
             schedule_time: combinedSchedule,
+            lateness: latenessValue,
         };
+
+        // Remove raw lateness fields
+        delete updatedFormData.hours_late;
+        delete updatedFormData.minutes_late;
 
         const token = localStorage.getItem("token");
 
@@ -107,25 +113,21 @@ const FormPage = () => {
         try {
             setLoading(true);
 
-            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/form/add`, payload, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const { data } = await axios.post(
+                `${import.meta.env.VITE_API_URL}/form/add`,
+                payload,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
 
             const { success, message } = data;
 
             if (success) {
                 successNotify();
-                setTimeout(() => {
-                    navigate("/home");
-                }, 1500); // wait 1.5 seconds
+                setTimeout(() => navigate("/home"), 1500);
             } else {
                 invalidNotify();
                 console.error("Adding failed:", message);
-                setTimeout(() => {
-                    navigate("/home");
-                }, 1500); // wait 1.5 seconds
+                setTimeout(() => navigate("/home"), 1500);
             }
         } catch (error) {
             setLoading(false);
@@ -143,12 +145,9 @@ const FormPage = () => {
                 try {
                     const reg = await navigator.serviceWorker.ready;
                     await reg.sync.register('sync-pending-forms');
-                    console.log('Background sync registered: sync-pending-forms');
                 } catch (err) {
-                    console.log('Background sync registration failed (will rely on online listener):', err);
+                    console.log('Background sync registration failed:', err);
                 }
-            } else {
-                console.log('Background sync not supported; will rely on window.online listener');
             }
 
             toast.info("Saved offline. Will sync when you're online.", {
@@ -157,42 +156,34 @@ const FormPage = () => {
 
             navigate("/home");
         }
-
     };
 
     // fetch data
     const fetchData = async () => {
         try {
-            // 1️⃣ Try to load from cache first
             const cached = await localforage.getItem(CACHE_KEY);
             if (cached && cached.data) {
                 setData(cached.data);
                 const expired = Date.now() - cached.timestamp > CACHE_EXPIRATION;
-                if (!expired) return; // cache valid, skip API
+                if (!expired) return;
             }
         } catch (error) {
             console.log("No cached schedule data", error);
-            setData([]); // fallback empty array
+            setData([]);
         }
     };
 
     useEffect(() => {
         fetchData();
-    }, [])
+    }, []);
 
-    // For viewing formData before submission / dev helper
-    // useEffect(() => {
-    //     console.log(formData);
-    // }, [formData])
-
-    // Validate start & end time difference
+    // Validate time difference
     useEffect(() => {
         if (!startTime || !endTime) return;
 
         const start = new Date(`1970-01-01T${startTime}`);
         const end = new Date(`1970-01-01T${endTime}`);
 
-        // End cannot be earlier
         if (end < start) {
             toast.error("End time cannot be earlier than start time.", {
                 position: "top-center",
@@ -201,7 +192,6 @@ const FormPage = () => {
             return;
         }
 
-        // End cannot exceed 5 hours after start
         const diffHours = (end - start) / (1000 * 60 * 60);
 
         if (diffHours > 5) {
@@ -212,30 +202,18 @@ const FormPage = () => {
         }
     }, [startTime, endTime]);
 
-
     if (loading) {
         return (
             <>
                 <Loading />
-                <ToastContainer
-                    position="top-center"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
-                />
+                <ToastContainer position="top-center" autoClose={5000} theme="light" />
             </>
         );
     }
 
     return (
         <>
-            <NavBarTwo message="Manual Form" />
+            <NavBarTwo message="Room Change Form" />
             <div className="max-w-2xl mx-auto bg-white px-5 pt-6 pb-8">
                 <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -244,14 +222,14 @@ const FormPage = () => {
                         <label className="block text-md font-medium text-gray-700 mb-1">Room Number</label>
                         <input
                             type="text"
-                            list='room_list'
+                            list="room_list"
                             name="room_number"
                             value={formData.room_number}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border rounded"
                             required
                         />
-                        <datalist id='room_list'>
+                        <datalist id="room_list">
                             {[...new Set(
                                 data
                                     .map(item => item.room_id)
@@ -263,7 +241,7 @@ const FormPage = () => {
                     </div>
 
                     {/* Room Change */}
-                    <div className="">
+                    <div className="hidden">
                         <label className="block text-md font-medium text-gray-700">Room Change</label>
                         <div className="flex flex-row gap-3">
                             <input
@@ -295,7 +273,7 @@ const FormPage = () => {
                         <label className="block text-md font-medium text-gray-700 mb-1">Instructor Email</label>
                         <input
                             type="email"
-                            placeholder='Optional'
+                            placeholder="Optional"
                             name="instructor_email"
                             value={formData.instructor_email}
                             onChange={handleChange}
@@ -304,8 +282,8 @@ const FormPage = () => {
                     </div>
 
                     {/* Schedule Time */}
-                    <div className='flex flex-row gap-4'>
-                        <div className='w-1/2'>
+                    <div className="flex flex-row gap-4">
+                        <div className="w-1/2">
                             <label className="block text-md font-medium text-gray-700 mb-1">Start Time</label>
                             <input
                                 type="time"
@@ -315,7 +293,7 @@ const FormPage = () => {
                                 className="w-full px-3 py-2 border rounded"
                             />
                         </div>
-                        <div className='w-1/2'>
+                        <div className="w-1/2">
                             <label className="block text-md font-medium text-gray-700 mb-1">End Time</label>
                             <input
                                 type="time"
@@ -328,7 +306,7 @@ const FormPage = () => {
                     </div>
 
                     {/* Instructor Presence */}
-                    <div className="">
+                    <div>
                         <label className="block text-md font-medium text-gray-700">Instructor Presence</label>
                         <div className="flex flex-row gap-3">
                             <input
@@ -342,8 +320,8 @@ const FormPage = () => {
                         </div>
                     </div>
 
-                    {/* Late Presence (is_late) */}
-                    <div className="">
+                    {/* Instructor Lateness */}
+                    <div>
                         <label className="block text-md font-medium text-gray-700">Instructor Lateness</label>
                         <div className="flex flex-row gap-3">
                             <input
@@ -364,6 +342,51 @@ const FormPage = () => {
                         </div>
                     </div>
 
+                    {/* Lateness Input Section */}
+                    {formData.is_late && (
+                        <div className="mt-2 p-3 border rounded bg-gray-50">
+
+                            {/* Hours Late */}
+                            <div className="mb-3">
+                                <label className="block text-md font-medium text-gray-700 mb-1">
+                                    Hour/s Late
+                                </label>
+                                <select
+                                    name="hours_late"
+                                    value={formData.hours_late}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded"
+                                >
+                                    <option value="">Select hours</option>
+                                    {[1, 2, 3, 4].map(num => (
+                                        <option key={num} value={num}>{num}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Minutes Late */}
+                            <div>
+                                <label className="block text-md font-medium text-gray-700 mb-1">
+                                    Minute/s Late
+                                </label>
+                                <input
+                                    type="number"
+                                    name="minutes_late"
+                                    value={formData.minutes_late}
+                                    onChange={(e) => {
+                                        if (e.target.value >= 0 && e.target.value <= 59) {
+                                            handleChange(e);
+                                        }
+                                    }}
+                                    min="1"
+                                    max="59"
+                                    placeholder='1'
+                                    className="w-full px-3 py-2 border rounded"
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Remarks */}
                     <div>
                         <label className="block text-md font-medium text-gray-700 mb-1">Remarks</label>
@@ -376,9 +399,12 @@ const FormPage = () => {
                         ></textarea>
                     </div>
 
-                    {/* Photo Upload / Camera */}
-                    <div className="">
-                        <label htmlFor="photo-upload" className="bg-red-200 h-10 flex justify-center items-center w-full rounded text-md font-medium text-gray-700 mb-1">
+                    {/* Photo Upload */}
+                    <div>
+                        <label
+                            htmlFor="photo-upload"
+                            className="bg-red-200 h-10 flex justify-center items-center w-full rounded text-md font-medium text-gray-700 mb-1"
+                        >
                             Upload Photo
                         </label>
                         <input
@@ -390,7 +416,10 @@ const FormPage = () => {
                             onChange={handleChange}
                             className="hidden"
                         />
-                        <p className="text-xs text-gray-500 mt-1">You can take a picture using your mobile device.</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            You can take a picture using your mobile device.
+                        </p>
+
                         {preview && (
                             <img
                                 src={preview}
@@ -411,6 +440,8 @@ const FormPage = () => {
                     </div>
                 </form>
             </div>
+
+            <ToastContainer />
         </>
     );
 };

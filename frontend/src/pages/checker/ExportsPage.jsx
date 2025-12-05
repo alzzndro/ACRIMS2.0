@@ -6,9 +6,9 @@ import NavBarTwo from "../../components/checker/NavBarTwo";
 
 const ExportsPage = () => {
     const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);   // ✅ NEW
     const [loading, setLoading] = useState(false);
 
-    // NEW: filter state
     const [filterType, setFilterType] = useState("none");
 
     const toUpperName = (name) =>
@@ -34,6 +34,7 @@ const ExportsPage = () => {
                         const value = row[header];
                         return typeof value === "string" && value.includes(",")
                             ? `"${value.replace(/"/g, '""')}"`
+
                             : value;
                     })
                     .join(",")
@@ -52,8 +53,13 @@ const ExportsPage = () => {
     };
 
     const handleExport = async () => {
-        if (!startDate) {
-            alert("Please select a start date.");
+        if (!startDate || !endDate) {
+            alert("Please select BOTH start and end dates.");
+            return;
+        }
+
+        if (endDate < startDate) {
+            alert("End date cannot be earlier than start date.");
             return;
         }
 
@@ -66,9 +72,7 @@ const ExportsPage = () => {
         try {
             setLoading(true);
 
-            const endDate = new Date(); // today
-
-            // Fetch all forms
+            // Fetch Forms
             const formsRes = await axios.get(
                 `${import.meta.env.VITE_API_URL}/form/checker`,
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -77,20 +81,20 @@ const ExportsPage = () => {
                 ? formsRes.data
                 : [formsRes.data];
 
-            // Fetch all users
+            // Fetch Users
             const usersRes = await axios.get(
                 `${import.meta.env.VITE_API_URL}/user`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const users = usersRes.data ?? [];
 
-            // 1️⃣ Filter by date
+            // 1️⃣ Date Filtering
             const filteredForms = forms.filter((form) => {
                 const formDate = new Date(form.date_monitored);
-                return formDate >= startDate && formDate <= endDate;
+                return formDate >= startDate && formDate <= endDate;    // ✅ UPDATED
             });
 
-            // 2️⃣ Filter by status
+            // 2️⃣ Status Filtering
             let filteredByStatus = filteredForms;
 
             if (filterType === "present") {
@@ -110,14 +114,13 @@ const ExportsPage = () => {
                     truthyPresence(f.changed_rooms)
                 );
             }
-            // filterType === "none" → no filter
 
             if (!filteredByStatus.length) {
                 alert("No records match your selected filters.");
                 return;
             }
 
-            // 3️⃣ Join forms with checker names
+            // 3️⃣ Join with Checker Name
             const joinedData = filteredByStatus.map((form) => {
                 const user = users.find((u) => u.user_id === form.checker_id);
                 return {
@@ -130,7 +133,7 @@ const ExportsPage = () => {
                 };
             });
 
-            // 4️⃣ Prepare CSV data
+            // 4️⃣ Prepare CSV Data
             const exportData = joinedData.map((form) => ({
                 Date: form.date_monitored,
                 Time: to12Hour(form.time_monitored),
@@ -139,12 +142,17 @@ const ExportsPage = () => {
                 Schedule_Time: form.schedule_time,
                 Present: truthyPresence(form.instructor_presence) ? "Yes" : "No",
                 Late: truthyPresence(form.is_late) ? "Yes" : "No",
+                Time_Late: form.lateness || "N/A",
                 Changed_Rooms: truthyPresence(form.changed_rooms) ? "Yes" : "No",
-                Remarks: form.remarks || "",
+                Remarks: form.remarks || "-",
                 Checker_Name: form.checker_name,
             }));
 
-            exportToCSV(exportData, "acrims_monthly_report");
+            const now = new Date();
+            const dateString = now.toISOString().replace(/:/g, "-").replace(/\..+/, "");
+            const csvFilename = `acrims_monthly_report_${dateString}`;
+
+            exportToCSV(exportData, csvFilename);
         } catch (err) {
             console.log("Export error:", err);
             alert("Error exporting data.");
@@ -160,6 +168,7 @@ const ExportsPage = () => {
             <div className="p-8 max-w-md mx-auto">
                 <h1 className="text-2xl font-bold mb-6">Export ACRIMS Report</h1>
 
+                {/* Start Date */}
                 <label className="block text-sm font-semibold mb-2">
                     Start Date
                 </label>
@@ -171,7 +180,20 @@ const ExportsPage = () => {
                     className="border p-2 w-full rounded mb-6"
                 />
 
-                {/* Radio Filters */}
+                {/* End Date */}
+                <label className="block text-sm font-semibold mb-2">
+                    End Date
+                </label>
+                <DatePicker
+                    selected={endDate}
+                    onChange={setEndDate}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Select end date"
+                    className="border p-2 w-full rounded mb-6"
+                    minDate={startDate}   // prevent invalid dates
+                />
+
+                {/* Filters */}
                 <div className="mb-6">
                     <h1 className="font-semibold mb-2">Filter by:</h1>
 
@@ -209,7 +231,6 @@ const ExportsPage = () => {
                             Absent
                         </label>
 
-                        {/* ✅ NEW FILTER OPTION */}
                         <label className="flex items-center gap-2">
                             <input
                                 type="radio"

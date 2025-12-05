@@ -33,6 +33,7 @@ export async function addForm(req, res) {
             instructor_email,
             instructor_presence,
             is_late,
+            lateness,
             remarks,
             schedule_time,
             changed_rooms
@@ -52,6 +53,7 @@ export async function addForm(req, res) {
             instructor_name,
             instructor_presence: presenceValue,
             is_late: lateValue,
+            lateness,
             remarks,
             schedule_time,
             photo: photoPath,

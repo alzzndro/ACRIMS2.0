@@ -50,16 +50,10 @@ const HomePage = () => {
                 return;
             }
 
-            // Fetch fresh data from API
-            const [jsonResponse, mysqlResponse] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }).catch(() => ({ data: { files: [] } })), // fallback
-
-                axios.get(`${import.meta.env.VITE_API_URL}/schedules/current`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }).catch(() => ({ data: { schedules: [] } })) // fallback
-            ]);
+            // Fetch fresh data from API (remove MySQL request)
+            const jsonResponse = await axios.get(`${import.meta.env.VITE_API_URL}/schedules/json`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).catch(() => ({ data: { files: [] } })); // fallback
 
             const jsonSchedules = (jsonResponse.data.files || []).flatMap(file =>
                 (file.schedules || []).map(schedule => ({
@@ -69,21 +63,13 @@ const HomePage = () => {
                 }))
             );
 
-            const mysqlSchedules = (mysqlResponse.data.schedules || []).map(schedule => ({
-                ...schedule,
-                source: 'mysql'
-            }));
-
-            const allSchedules = [...jsonSchedules, ...mysqlSchedules];
-
             // Save fresh data to cache
-            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: allSchedules });
+            await localforage.setItem(CACHE_KEY, { timestamp: Date.now(), data: jsonSchedules });
             console.log("schedule cached");
 
+            setData(jsonSchedules);
 
-            setData(allSchedules);
-
-            console.log("Total schedules loaded:", allSchedules.length);
+            console.log("Total schedules loaded:", jsonSchedules.length);
 
         } catch (error) {
             console.log("Error fetching schedules:", error);
@@ -93,7 +79,7 @@ const HomePage = () => {
 
     useEffect(() => {
         fetchData();
-    }, [])
+    }, []);
 
     useEffect(() => {
         if (data.length === 0) {
@@ -149,8 +135,6 @@ const HomePage = () => {
                     </div>
                 </div>
             </div>
-
-
         </>
     );
 };

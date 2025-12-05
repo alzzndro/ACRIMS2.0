@@ -39,17 +39,19 @@ export async function addForm(data) {
                 instructor_name,
                 instructor_presence,
                 is_late,
+                lateness,
                 remarks,
                 schedule_time,
                 photo,
                 checker_id,
                 changed_rooms
-            ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (CURRENT_DATE, CURRENT_TIME, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 data.room_number,
                 data.instructor_name,
                 data.instructor_presence,
                 data.is_late,
+                data.lateness || null,
                 data.remarks || null,
                 data.schedule_time || null,
                 data.photo || null,
@@ -72,8 +74,10 @@ export async function updateForm(data, id) {
             room_number = ?, 
             instructor_name = ?, 
             instructor_presence = ?, 
-            is_late = ?, 
-            remarks = ?
+            is_late = ?,
+            lateness = ?, 
+            remarks = ?,
+            changed_rooms = ?
          WHERE form_id = ?`,
         [
             data.room_number,
@@ -84,7 +88,9 @@ export async function updateForm(data, id) {
             data.is_late !== undefined && data.is_late !== null
                 ? data.is_late
                 : 0, // fallback if null
+            data.lateness,
             data.remarks,
+            data.changed_rooms,
             id
         ]
     );
