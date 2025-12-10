@@ -6,6 +6,7 @@ import { FaDoorClosed } from "react-icons/fa";
 import { FaRegSquarePlus } from "react-icons/fa6";
 import { FaCalendarAlt } from "react-icons/fa";
 import { CiViewList } from "react-icons/ci";
+import { FaExchangeAlt } from "react-icons/fa";
 import useGetMe from '../../hooks/useGetMe';
 import Loading from '../../components/common/Loading';
 import axios from 'axios';
@@ -114,7 +115,7 @@ const HomePage = () => {
                 <div className='p-5 flex flex-wrap gap-5 justify-center @[414px]/Home:gap-10 rounded-2xl bg-white mt-[-1rem]'>
                     <Link to="/rooms" className='w-36 aspect-square bg-[var(--bg-gray)] shadow-lg rounded-2xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
                         <FaDoorClosed size={50} />
-                        <p className=''>Room Check</p>
+                        <p className=''>Automated Forms</p>
                     </Link>
                     <Link to="/form/new" className='w-36 aspect-square bg-[var(--bg-gray)] shadow-lg rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
                         <FaRegSquarePlus size={50} />
@@ -127,6 +128,10 @@ const HomePage = () => {
                     <Link to="/mylist" className='w-36 aspect-square bg-[var(--bg-gray)] shadow-lg rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
                         <CiViewList size={50} />
                         <p className=''>My Forms</p>
+                    </Link>
+                    <Link to="/requests" className='w-36 aspect-square bg-[var(--bg-gray)] text-center shadow-lg rounded-3xl flex flex-col justify-center items-center gap-4 focus:bg-blue-300 focus:scale-110'>
+                        <FaExchangeAlt size={50} />
+                        <p className=''>Changed Rooms Requests</p>
                     </Link>
 
                     {/* Designs */}

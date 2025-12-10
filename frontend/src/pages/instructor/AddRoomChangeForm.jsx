@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
@@ -17,12 +17,33 @@ export default function AddRoomChangeForm() {
         reason_of_change: ""
     });
 
+    const [users, setUsers] = useState([]);
+
     const navigate = useNavigate();
     const currentTimeIn24Hour = to24HourNow();
 
     const handleBackArrow = () => {
         navigate(-1);
     };
+
+    const fetchDpdUsers = async () => {
+        try {
+            const res = await axios.get(
+                `${import.meta.env.VITE_API_URL}/user/uzers`
+            );
+
+            const dpd = res.data.filter(user => user.department_id !== null);
+
+            setUsers(dpd);
+        } catch (error) {
+            console.log("Failed to users data:", error);
+            alert("Failed to load users data");
+        }
+    }
+
+    useEffect(() => {
+        fetchDpdUsers();
+    }, [])
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -51,6 +72,10 @@ export default function AddRoomChangeForm() {
             const now = new Date();
             const isoDate = now.toISOString().slice(0, 10);
 
+            const dpdEmails = users
+                .filter(u => u.department_id === user.department_id)
+                .map(u => u.email);
+
             // ✅ Date + Time already in correct backend format
             const updatedFormData = {
                 ...formData,
@@ -58,6 +83,7 @@ export default function AddRoomChangeForm() {
                 email: user.email,
                 date_submitted: isoDate,
                 time_submitted: currentTimeIn24Hour,
+                dpd_emails: dpdEmails,
             };
 
             await axios.post(

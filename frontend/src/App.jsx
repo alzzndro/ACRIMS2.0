@@ -35,6 +35,10 @@ import RequestFormsPage from './pages/dpd/RequestFormsPage';
 import ReviewRoomChangeForm from './pages/dpd/ReviewRoomChangeForm';
 import ReviewedRequestFormsPage from './pages/dpd/ReviewedRequestFormPage';
 import RLICRequestFormsPage from './pages/rlic/RlicRequestFormsPage';
+import RLICReviewRoomChangeForm from './pages/rlic/RLICReviewRoomChangeForm';
+import RLICReviewedFormsPage from './pages/rlic/RLICReviewedFormsPage';
+import CheckerRequestFormsPage from './pages/checker/CheckerRequestFormsPage';
+import CheckerReviewRoomChangeForm from './pages/checker/CheckerReviewRoomChangeForm';
 
 // function usePendingResend() {
 //   const [isResending, setIsResending] = useState(false);
@@ -156,6 +160,14 @@ function App() {
           <ProtectedRoute allowedRoles={['checker']}><ScheduleTimetablePage /></ProtectedRoute>
         } />
 
+        <Route path='/requests' element={
+          <ProtectedRoute allowedRoles={['checker']}><CheckerRequestFormsPage /></ProtectedRoute>
+        } />
+
+        <Route path='/review/:id' element={
+          <ProtectedRoute allowedRoles={['checker']}><CheckerReviewRoomChangeForm /></ProtectedRoute>
+        } />
+
         {/* ------------------------------ ADMIN ------------------------------ */}
         <Route path='/admin/dashboard' element={
           <ProtectedRoute allowedRoles={['admin']}><DashboardPage /></ProtectedRoute>
@@ -229,6 +241,14 @@ function App() {
 
         <Route path='/rlic/requests' element={
           <ProtectedRoute allowedRoles={'rlic'}><RLICRequestFormsPage /></ProtectedRoute>
+        } />
+
+        <Route path='/rlic/reviewed' element={
+          <ProtectedRoute allowedRoles={'rlic'}><RLICReviewedFormsPage /></ProtectedRoute>
+        } />
+
+        <Route path='/rlic/review/:id' element={
+          <ProtectedRoute allowedRoles={'rlic'}><RLICReviewRoomChangeForm /></ProtectedRoute>
         } />
 
 

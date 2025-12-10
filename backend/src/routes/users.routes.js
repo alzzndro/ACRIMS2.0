@@ -13,6 +13,7 @@ router.get('/verify', authMiddleware, usersController.verify);
 router.get('/me', authMiddleware, usersController.getUser);
 
 router.get('/', authMiddleware, usersController.getAllUsers);
+router.get('/uzers', usersController.getAllUsers);
 router.put('/edit/image', authMiddleware, upload.single("image"), usersController.editUserPhoto);
 router.put('/edit/details', authMiddleware, usersController.editUserDetails);
 router.put('/edit/password/:id', authMiddleware, usersController.editUserPassword);
