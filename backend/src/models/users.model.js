@@ -8,7 +8,7 @@ export async function getAllUsers() {
 
 // ADD USER ------------------------------------------------------------------------------
 export async function addUser(data) {
-    const [result] = await db.query(`INSERT INTO users(user_id, email, password, first_name, last_name, user_role) VALUES(?, ?, ?, ?, ?, ?)`, [data.user_id, data.email, data.password, data.first_name, data.last_name, data.user_role])
+    const [result] = await db.query(`INSERT INTO users(user_id, email, password, first_name, last_name, user_role, department_id) VALUES(?, ?, ?, ?, ?, ?, ?)`, [data.user_id, data.email, data.password, data.first_name, data.last_name, data.user_role, data.department_id])
     return result.insertId
 }
 

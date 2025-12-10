@@ -18,7 +18,7 @@ export async function getAllUsers(req, res) {
 export async function addUser(req, res) {
     const saltRounds = 10;
     try {
-        const { email, first_name, last_name, password, user_role } = req.body // inputs from the client through req.body
+        const { email, first_name, last_name, password, user_role, department_id } = req.body // inputs from the client through req.body
 
         // check if input contains no value
         if (!email || !password || !user_role) {
@@ -32,7 +32,7 @@ export async function addUser(req, res) {
         const uid = customAlphabet('1234567890', 6);
         const user_id = uid();
 
-        await service.addUser({ user_id, email, password: hashedPassword, first_name, last_name, user_role });
+        await service.addUser({ user_id, email, password: hashedPassword, first_name, last_name, user_role, department_id });
         res.status(201).send("User added successfully!");
 
     } catch (error) {
@@ -70,7 +70,7 @@ export async function loginUser(req, res) {
             return res.status(401).json({ password: false, success: false })
         }
 
-        const token = jwt.sign({ id: user.user_id, email: user.email, role: user.user_role }, process.env.JWT_SECRET_KEY, { expiresIn: '24h' })
+        const token = jwt.sign({ id: user.user_id, email: user.email, role: user.user_role, department_id: user.department_id }, process.env.JWT_SECRET_KEY, { expiresIn: '24h' })
 
         // successful
         return res.status(200).json({
@@ -80,6 +80,7 @@ export async function loginUser(req, res) {
             user: {
                 id: user.user_id,
                 role: user.user_role,
+                department_id: user.department_id,
                 name: user.first_name + ' ' + user.last_name,
                 email: user.email,
             }

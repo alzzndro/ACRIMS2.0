@@ -9,6 +9,7 @@ import { router as monitoringFormRouter } from './routes/monitoring_form.route.j
 import { router as usersRouter } from './routes/users.routes.js';
 import { router as scheduleRouter } from './routes/schedules.route.js';
 import { router as scheduleJsonRouter } from './routes/schedules-json.route.js';
+import { router as roomChangeFormRouter } from './routes/room_change_form.route.js';
 
 
 // import fs for photo
@@ -28,6 +29,7 @@ app.use('/form', monitoringFormRouter);
 app.use('/user', usersRouter);
 app.use('/schedules/json', scheduleJsonRouter);
 app.use('/schedules', scheduleRouter);
+app.use('/roomchange', roomChangeFormRouter);
 
 
 // ---------------------- STATIC FILES ----------------------

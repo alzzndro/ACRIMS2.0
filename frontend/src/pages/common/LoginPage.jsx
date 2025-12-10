@@ -69,6 +69,9 @@ const LoginPage = () => {
 
             if (user.role === 'admin') navigate('/admin/dashboard');
             else if (user.role === 'checker') navigate('/home');
+            else if (user.role === 'instructor') navigate('/instructor/home');
+            else if (user.role === 'dpd') navigate('/dpd/home');
+            else if (user.role === 'rlic') navigate('/rlic/home');
             else invalidNotify();
         } catch (error) {
             console.error(error);
@@ -97,6 +100,9 @@ const LoginPage = () => {
         if (token && parsedUser && remember === 'true') {
             if (parsedUser.role === 'admin') navigate('/admin/dashboard');
             else if (parsedUser.role === 'checker') navigate('/home');
+            else if (parsedUser.role === 'instructor') navigate('/instructor/home');
+            else if (parsedUser.role === 'dpd') navigate('/dpd/home');
+            else if (parsedUser.role === 'rlic') navigate('/rlic/home');
         }
     }, [navigate]);
 

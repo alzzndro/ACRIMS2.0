@@ -22,6 +22,7 @@ const Logout = () => {
     }
 
     useEffect(() => {
+        localStorage.clear();
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         clearGetMeCache();

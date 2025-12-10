@@ -33,7 +33,8 @@ export default function UserManagementPage() {
         last_name: '',
         email: '',
         password: '',
-        user_role: 'checker'
+        user_role: 'checker',
+        department_id: null
     });
 
     const [confirmPassword, setConfirmPassword] = useState(null);
@@ -100,6 +101,7 @@ export default function UserManagementPage() {
             setShowAddModal(false);
             setNewUser({ first_name: '', last_name: '', email: '', password: '', user_role: 'checker' });
             fetchUsers();
+            setConfirmPassword("");
         } catch (err) {
             console.error('Error adding user:', err);
             alert('Error adding user: ' + (err.response?.data || err.message));
@@ -143,7 +145,10 @@ export default function UserManagementPage() {
     const getRoleBadge = (role) => {
         const styles = {
             admin: 'bg-red-500/20 text-red-900 border-black/50',
-            checker: 'bg-blue-500/20 text-blue-900 border-black/50'
+            checker: 'bg-blue-500/20 text-blue-900 border-black/50',
+            instructor: 'bg-green-500/20 text-green-900 border-black/50',
+            dpd: 'bg-gray-500/20 text-gray-900 border-black/50',
+            rlic: 'bg-yellow-500/20 text-yellow-900 border-black/50'
         };
         return styles[role] || styles.checker;
     };
@@ -375,6 +380,7 @@ export default function UserManagementPage() {
                                     type="email"
                                     value={newUser.email}
                                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                    required
                                     className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                 />
                             </div>
@@ -385,6 +391,7 @@ export default function UserManagementPage() {
                                     type="password"
                                     value={newUser.password}
                                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                    required
                                     className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                 />
                             </div>
@@ -395,6 +402,7 @@ export default function UserManagementPage() {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
                                     className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
                                 />
                             </div>
@@ -408,8 +416,29 @@ export default function UserManagementPage() {
                                 >
                                     <option value="checker">Checker</option>
                                     <option value="admin">Admin</option>
+                                    <option value="instructor">Instructor</option>
+                                    <option value="dpd">Program Chair</option>
+                                    <option value="rlic">Room Loading In-charge</option>
                                 </select>
                             </div>
+
+                            {newUser.user_role && newUser.user_role === "dpd" && (
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-2">Select Department</label>
+                                    <select
+                                        value={newUser.department_id}
+                                        onChange={(e) => setNewUser({ ...newUser, department_id: Number(e.target.value) })}
+                                        className="w-full px-3 py-2 rounded-lg bg-white border border-black focus:border-neon/50 focus:outline-none"
+                                    >
+                                        <option value={1}>TVET</option>
+                                        <option value={2}>CSE</option>
+                                        <option value={3}>CBA</option>
+                                        <option value={4}>CTHM</option>
+                                        <option value={5}>GRADE 11</option>
+                                        <option value={6}>GRADE 12</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex gap-3 mt-6">

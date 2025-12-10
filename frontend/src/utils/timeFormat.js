@@ -12,3 +12,17 @@ export const to12HourV2 = (time24) => {
     date.setHours(hour, minute);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
+export const to24HourNow = () => {
+    const now = new Date();
+
+    // Explicitly setting hour12: false with 'en-US' locale
+    const militaryTimeUS = now.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+    return militaryTimeUS;
+}

@@ -10,9 +10,9 @@ import Logout from './pages/common/Logout';
 import FormPage from './pages/checker/FormPage';
 import PendingPage from './pages/checker/PendingPage';
 import FormByIdPage from './pages/checker/FormByIdPage';
-import { useEffect, useState } from 'react';
-import localforage from 'localforage';
-import axios from 'axios';
+// import { useEffect, useState } from 'react';
+// import localforage from 'localforage';
+// import axios from 'axios';
 import FormUpdatePage from './pages/checker/FormUpdatePage';
 import DashboardPage from './pages/admin/DashboardPage';
 import ProfilePage from './pages/checker/ProfilePage';
@@ -25,81 +25,93 @@ import SchedulePage from './pages/checker/SchedulePage';
 import ScheduleTimetablePage from './pages/checker/ScheduleTimetablePage';
 import RecentFormByIdPage from './pages/admin/RecentFormByIdPage';
 import ExportsPage from './pages/checker/ExportsPage';
+import InstructorHomePage from './pages/instructor/InstructorHomePage';
+import DpdHomePage from './pages/dpd/DpdHomePage';
+import RLICPage from './pages/rlic/RLICPage';
+import AddRoomChangeForm from './pages/instructor/AddRoomChangeForm';
+import MySubmittedForms from './pages/instructor/MySubmittedForms';
+import EditRoomChangeForm from './pages/instructor/EditRoomChangeForm';
+import RequestFormsPage from './pages/dpd/RequestFormsPage';
+import ReviewRoomChangeForm from './pages/dpd/ReviewRoomChangeForm';
+import ReviewedRequestFormsPage from './pages/dpd/ReviewedRequestFormPage';
+import RLICRequestFormsPage from './pages/rlic/RlicRequestFormsPage';
 
-function usePendingResend() {
-  const [isResending, setIsResending] = useState(false);
+// function usePendingResend() {
+//   const [isResending, setIsResending] = useState(false);
 
-  useEffect(() => {
-    const tryResend = async () => {
-      if (localStorage.getItem("resend_lock")) return;
+//   useEffect(() => {
+//     const tryResend = async () => {
+//       if (localStorage.getItem("resend_lock")) return;
 
-      localStorage.setItem("resend_lock", "true");
-      setIsResending(true);
+//       localStorage.setItem("resend_lock", "true");
+//       setIsResending(true);
 
-      const keys = await localforage.keys();
+//       const keys = await localforage.keys();
 
-      for (const key of keys) {
-        if (key.startsWith("pending-")) {
-          const form = await localforage.getItem(key);
-          const token = localStorage.getItem("token");
-          const payload = new FormData();
+//       for (const key of keys) {
+//         if (key.startsWith("pending-")) {
+//           const form = await localforage.getItem(key);
+//           const token = localStorage.getItem("token");
+//           const payload = new FormData();
 
-          Object.entries(form.formData).forEach(([k, v]) => {
-            if (v !== null) payload.append(k, v);
-          });
+//           Object.entries(form.formData).forEach(([k, v]) => {
+//             if (v !== null) payload.append(k, v);
+//           });
 
-          try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/form/add`, payload, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+//           try {
+//             await axios.post(`${import.meta.env.VITE_API_URL}/form/add`, payload, {
+//               headers: { Authorization: `Bearer ${token}` },
+//             });
 
-            await localforage.removeItem(key);
-            console.log(`✅ Resent form ${key} successfully`);
-          } catch (error) {
-            console.log(`❌ Failed to resend ${key}`, error.message);
-          }
-        }
-      }
+//             await localforage.removeItem(key);
+//             console.log(`✅ Resent form ${key} successfully`);
+//           } catch (error) {
+//             console.log(`❌ Failed to resend ${key}`, error.message);
+//           }
+//         }
+//       }
 
-      setIsResending(false);
-      localStorage.removeItem("resend_lock");
-    };
+//       setIsResending(false);
+//       localStorage.removeItem("resend_lock");
+//     };
 
-    if (navigator.onLine) tryResend();
+//     if (navigator.onLine) tryResend();
 
-    const handleOnline = () => tryResend();
-    window.addEventListener("online", handleOnline);
+//     const handleOnline = () => tryResend();
+//     window.addEventListener("online", handleOnline);
 
-    // Listen for service worker messages (Background Sync)
-    function onSWMessage(event) {
-      if (!event.data) return;
-      if (event.data.type === 'SYNC_PENDING_FORMS') {
-        console.log('Received SW request to sync pending forms');
-        tryResend();
-      }
-    }
+//     // Listen for service worker messages (Background Sync)
+//     function onSWMessage(event) {
+//       if (!event.data) return;
+//       if (event.data.type === 'SYNC_PENDING_FORMS') {
+//         console.log('Received SW request to sync pending forms');
+//         tryResend();
+//       }
+//     }
 
-    navigator.serviceWorker?.addEventListener?.('message', onSWMessage);
+//     navigator.serviceWorker?.addEventListener?.('message', onSWMessage);
 
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      navigator.serviceWorker?.removeEventListener?.('message', onSWMessage);
-    };
-  }, [isResending]);
-}
+//     return () => {
+//       window.removeEventListener("online", handleOnline);
+//       navigator.serviceWorker?.removeEventListener?.('message', onSWMessage);
+//     };
+//   }, [isResending]);
+// }
 
 // ---------------------------------------------------
 // APP COMPONENT
 // ---------------------------------------------------
 function App() {
-  usePendingResend();
+  // usePendingResend();
 
   return (
     <Router>
       <Routes>
         <Route path='/' element={<LoginPage />} />
+
         <Route path='/logout' element={<Logout />} />
 
+        {/* ------------------------------ CHECKER ------------------------------ */}
         <Route path='/home' element={
           <ProtectedRoute allowedRoles={['checker']}><HomePage /></ProtectedRoute>
         } />
@@ -144,6 +156,7 @@ function App() {
           <ProtectedRoute allowedRoles={['checker']}><ScheduleTimetablePage /></ProtectedRoute>
         } />
 
+        {/* ------------------------------ ADMIN ------------------------------ */}
         <Route path='/admin/dashboard' element={
           <ProtectedRoute allowedRoles={['admin']}><DashboardPage /></ProtectedRoute>
         } />
@@ -171,6 +184,54 @@ function App() {
         <Route path='/admin/schedules' element={
           <ProtectedRoute allowedRoles={['admin']}><ScheduleManagementPage /></ProtectedRoute>
         } />
+
+        {/* ------------------------------ INSTRUCTOR ------------------------------ */}
+
+        <Route path='/instructor/home' element={
+          <ProtectedRoute allowedRoles={['instructor']}><InstructorHomePage /></ProtectedRoute>
+        } />
+
+        <Route path='/instructor/roomchange/add' element={
+          <ProtectedRoute allowedRoles={'instructor'}><AddRoomChangeForm /></ProtectedRoute>
+        } />
+
+        <Route path='/instructor/roomchange/myforms' element={
+          <ProtectedRoute allowedRoles={'instructor'}><MySubmittedForms /></ProtectedRoute>
+        } />
+
+        <Route path='/instructor/roomchange/edit/:id' element={
+          <ProtectedRoute allowedRoles={'instructor'}><EditRoomChangeForm /></ProtectedRoute>
+        } />
+
+        {/* ------------------------------ DPD ------------------------------ */}
+
+        <Route path='/dpd/home' element={
+          <ProtectedRoute allowedRoles={'dpd'}><DpdHomePage /></ProtectedRoute>
+        } />
+
+        <Route path='/dpd/requests' element={
+          <ProtectedRoute allowedRoles={'dpd'}><RequestFormsPage /></ProtectedRoute>
+        } />
+
+        <Route path='/dpd/reviewed' element={
+          <ProtectedRoute allowedRoles={'dpd'}><ReviewedRequestFormsPage /></ProtectedRoute>
+        } />
+
+        <Route path='/dpd/review/:id' element={
+          <ProtectedRoute allowedRoles={'dpd'}><ReviewRoomChangeForm /></ProtectedRoute>
+        } />
+
+        {/* ------------------------------ RLIC ------------------------------ */}
+
+        <Route path='/rlic/home' element={
+          <ProtectedRoute allowedRoles={'rlic'}><RLICPage /></ProtectedRoute>
+        } />
+
+        <Route path='/rlic/requests' element={
+          <ProtectedRoute allowedRoles={'rlic'}><RLICRequestFormsPage /></ProtectedRoute>
+        } />
+
+
 
         <Route path='*' element={<NotFoundPage />} />
       </Routes>
