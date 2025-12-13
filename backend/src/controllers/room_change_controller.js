@@ -1,5 +1,6 @@
 import * as service from '../services/room_change_services.js';
 import dotenv from 'dotenv';
+import * as mailer from '../services/mailer.services.js';
 dotenv.config();
 
 // GET all forms
@@ -30,7 +31,8 @@ export async function addRoomChangeForm(req, res) {
             to_time,
             schedule_number,
             reason_of_change,
-            approved_by
+            approved_by,
+            dpd_emails
         } = req.body;
 
         await service.addRoomChangeForm({
@@ -47,12 +49,22 @@ export async function addRoomChangeForm(req, res) {
             to_time,
             schedule_number,
             reason_of_change,
-            approved_by
+            approved_by,
         });
+
+        if (dpd_emails) {
+            await mailer.sendEmailToDpd(email, dpd_emails, reason_of_change);
+            return res.status(201).json({
+                success: true,
+                message: "Room change form added successfully!",
+                emails: dpd_emails
+            });
+        }
 
         return res.status(201).json({
             success: true,
-            message: "Room change form added successfully!"
+            message: "Room change form added successfully!",
+            emails: dpd_emails
         });
 
     } catch (error) {
@@ -101,7 +113,18 @@ export async function deleteRoomChangeForm(req, res) {
 // PUT update form by ID
 export async function updateRoomChangeForm(req, res) {
     try {
+        const { email, rlic_email, reason_of_change, is_approved_head, full_name } = req.body;
+
         const result = await service.updateRoomChangeForm(req.body, req.params.id);
+
+        if (rlic_email && is_approved_head === 1) {
+            await mailer.sendEmailToRlic(email, rlic_email, full_name, reason_of_change);
+            return res.status(201).json({
+                success: true,
+                message: "Room change form added successfully!",
+                emails: rlic_email
+            });
+        }
 
         if (result.affectedRows === 0) {
             return res.status(404).send(`ID:${req.params.id} not found!`);

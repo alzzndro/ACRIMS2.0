@@ -45,5 +45,89 @@ monitoring@asiancollege.edu
     }
 }
 
+// ---------------------------------------------------------------------
+// From Instructor to DPD
+// ---------------------------------------------------------------------
+
+export async function sendEmailToDpd(from, to, full_name, message) {
+    try {
+        const emailInfo = {
+            from: `"Asian College Instructor" <${from}>`,
+            to,
+            subject: `Room Change Request from ${full_name}`,
+            text: `Good day,
+
+${full_name} has submitted a room change request.
+
+Reason for Room Change:
+${message}
+
+To review the full details of the submitted form, please visit the official monitoring system:
+acrims.netlify.app
+
+Your prompt attention to this request would be greatly appreciated. Should you require any additional information, please feel free to reach out.
+
+Thank you and have a great day.
+
+Sincerely,
+Asian College Instructor
+Asian College Monitoring Team
+Asian College
+monitoring@asiancollege.edu
+`,
+        };
+
+        const info = await transporter.sendMail(emailInfo);
+        console.log(`Message sent to ${to}: ${info.messageId}`);
+        return info;
+
+    } catch (error) {
+        console.error("Error sending email:", error);
+    }
+}
+
+// ---------------------------------------------------------------------
+// From DPD to RLIC
+// ---------------------------------------------------------------------
+
+export async function sendEmailToRlic(from, to, full_name, message) {
+    try {
+        const emailInfo = {
+            from: `"Asian College Instructor" <${process.env.MAILER_EMAIL}>`,
+            to,
+            subject: `Room Change Request from ${full_name}`,
+            text: `Good day,
+
+${full_name} has submitted a room change request.
+
+Reason for Room Change:
+${message}
+
+To review the full details of the submitted form, please visit the official monitoring system:
+acrims.netlify.app
+
+Your prompt attention to this request would be greatly appreciated. Should you require any additional information, please feel free to reach out.
+
+Thank you and have a great day.
+
+Sincerely,
+Asian College Instructor
+Asian College Monitoring Team
+Asian College
+monitoring@asiancollege.edu
+`,
+        };
+
+        const info = await transporter.sendMail(emailInfo);
+        console.log(`Message sent to ${to}: ${info.messageId}`);
+        return info;
+
+    } catch (error) {
+        console.error("Error sending email:", error);
+    }
+}
+
+
+
 console.log("MAILER_EMAIL:", process.env.MAILER_EMAIL);
 console.log("MAILER_PASS is defined:", !!process.env.MAILER_PASS);

@@ -12,6 +12,7 @@ export default function ReviewRoomChangeForm() {
     const [formData, setFormData] = useState(null);
     const [decision, setDecision] = useState(""); // approved | rejected
     const [loading, setLoading] = useState(true);
+    const [users, setUsers] = useState([]);
 
     // ✅ LOAD FORM BY ID
     useEffect(() => {
@@ -37,6 +38,27 @@ export default function ReviewRoomChangeForm() {
         navigate(-1);
     };
 
+    /* ----------------------------------------
+       Fetch ALL users ONCE
+    ---------------------------------------- */
+    const fetchUsers = async () => {
+        try {
+            const res = await axios.get(
+                `${import.meta.env.VITE_API_URL}/user/uzers`
+            );
+
+            setUsers(res.data);
+
+        } catch (error) {
+            console.log("Failed to load users data:", error);
+            alert("Failed to load users data");
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
     // ✅ SUBMIT REVIEW ONLY (NO FORM EDITING)
     const handleSubmitReview = async (e) => {
         e.preventDefault();
@@ -47,10 +69,20 @@ export default function ReviewRoomChangeForm() {
         }
 
         try {
+            const selectedRole = "rlic";
+
+            const rlic = users
+                .filter(u => u.user_role === selectedRole)
+                .map(u => u.email);
+
             const payload = {
                 ...formData,
+                email: formData.email,
+                full_name: formData.full_name,
+                reason_of_change: formData.reason_of_change,
                 approved_by: user.name, // ✅ SET APPROVER NAME
                 is_approved_head: decision === "approved" ? 1 : 0,
+                rlic_email: rlic,
             };
 
             await axios.put(

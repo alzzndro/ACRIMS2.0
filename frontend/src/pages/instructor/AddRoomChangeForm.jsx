@@ -17,38 +17,60 @@ export default function AddRoomChangeForm() {
         reason_of_change: ""
     });
 
-    const [users, setUsers] = useState([]);
+    const [users, setUsers] = useState([]);      // store ALL users
+    const [dpdEmails, setDpdEmails] = useState([]); // emails that match selected department
 
     const navigate = useNavigate();
     const currentTimeIn24Hour = to24HourNow();
 
-    const handleBackArrow = () => {
-        navigate(-1);
-    };
+    const handleBackArrow = () => navigate(-1);
 
-    const fetchDpdUsers = async () => {
+    /* ----------------------------------------
+       Fetch ALL users ONCE
+    ---------------------------------------- */
+    const fetchUsers = async () => {
         try {
             const res = await axios.get(
                 `${import.meta.env.VITE_API_URL}/user/uzers`
             );
 
-            const dpd = res.data.filter(user => user.department_id !== null);
+            setUsers(res.data);
 
-            setUsers(dpd);
         } catch (error) {
-            console.log("Failed to users data:", error);
+            console.log("Failed to load users data:", error);
             alert("Failed to load users data");
         }
-    }
+    };
 
     useEffect(() => {
-        fetchDpdUsers();
-    }, [])
+        fetchUsers();
+    }, []);
 
+    /* ----------------------------------------
+       When department_id changes → update emails
+    ---------------------------------------- */
+    useEffect(() => {
+        if (!formData.department_id) {
+            setDpdEmails([]);
+            return;
+        }
+
+        const selectedDept = Number(formData.department_id);
+
+        const emails = users
+            .filter(u => u.department_id === selectedDept)
+            .map(u => u.email);
+
+        setDpdEmails(emails);
+    }, [formData.department_id, users]);
+
+    /* ----------------------------------------
+       Handle Form Inputs
+    ---------------------------------------- */
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        setFormData((prev) => ({
+        setFormData(prev => ({
             ...prev,
             [name]:
                 name === "department_id" || name === "schedule_number"
@@ -57,33 +79,32 @@ export default function AddRoomChangeForm() {
         }));
     };
 
+    /* ----------------------------------------
+       Submit Form
+    ---------------------------------------- */
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            let user = localStorage.getItem("user");
-            if (!user) {
+            let storedUser = localStorage.getItem("user");
+
+            if (!storedUser) {
                 alert("User not found in local storage.");
                 return;
             }
 
-            user = JSON.parse(user);
+            storedUser = JSON.parse(storedUser);
 
             const now = new Date();
             const isoDate = now.toISOString().slice(0, 10);
 
-            const dpdEmails = users
-                .filter(u => u.department_id === user.department_id)
-                .map(u => u.email);
-
-            // ✅ Date + Time already in correct backend format
             const updatedFormData = {
                 ...formData,
-                full_name: user.name,
-                email: user.email,
+                full_name: storedUser.name,
+                email: storedUser.email,
                 date_submitted: isoDate,
                 time_submitted: currentTimeIn24Hour,
-                dpd_emails: dpdEmails,
+                dpd_emails: dpdEmails,  // 🔥 now correct
             };
 
             await axios.post(
@@ -93,6 +114,7 @@ export default function AddRoomChangeForm() {
 
             alert("Form submitted successfully!");
             navigate("/instructor/home");
+
         } catch (error) {
             console.log(error);
             alert("Failed to submit form");
@@ -119,7 +141,6 @@ export default function AddRoomChangeForm() {
                 onSubmit={handleSubmit}
                 className="bg-white p-8 rounded-xl shadow-md max-w-3xl mx-auto space-y-6"
             >
-
                 {/* Department */}
                 <div className="flex flex-col">
                     <label className="text-gray-700 font-medium mb-1">
@@ -148,7 +169,7 @@ export default function AddRoomChangeForm() {
                     <FormInput label="To Room" name="to_room" value={formData.to_room} onChange={handleChange} />
                 </div>
 
-                {/* ✅ From / To Day — DATE PICKER */}
+                {/* From / To Day */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormInput
                         label="From Day"
@@ -166,7 +187,7 @@ export default function AddRoomChangeForm() {
                     />
                 </div>
 
-                {/* ✅ From / To Time — 12HR DISPLAY → 24HR PAYLOAD */}
+                {/* From / To Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormInput
                         label="From Time"
