@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import '../../assets/css/common/variables.css';
 import NavBarOne from '../../components/checker/NavBarOne';
-import RedBox from '../../components/designs/RedBox';
 import { FaDoorClosed } from "react-icons/fa";
 import { FaRegSquarePlus } from "react-icons/fa6";
 import { FaCalendarAlt } from "react-icons/fa";
@@ -98,7 +97,7 @@ const HomePage = () => {
 
     return (
         <>
-            <div className='h-svh relative @container/Home overflow-hidden'>
+            <div className='h-svh relative @container/Home overflow-scroll'>
                 {/* Blue Container */}
                 <div className="h-52 w-full bg-[var(--blue-logo)] overflow-hidden">
                     <NavBarOne position="end" visibility="hidden" />
@@ -133,11 +132,6 @@ const HomePage = () => {
                         <FaExchangeAlt size={50} />
                         <p className=''>Changed Rooms Requests</p>
                     </Link>
-
-                    {/* Designs */}
-                    <div className='absolute rotate-[-45deg] bottom-[-7rem] left-[42%] translate-x-[-50%] z-[-10]'>
-                        <RedBox className={'h-40'} />
-                    </div>
                 </div>
             </div>
         </>

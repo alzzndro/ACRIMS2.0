@@ -39,11 +39,16 @@ export default function CheckerReviewRoomChangeForm() {
     // ✅ ✅ AUTO NOTE FORM (NO DECISION)
     const handleProceedNote = async () => {
         try {
+
             setSubmitting(true);
 
             const payload = {
                 ...formData, // ✅ PREVENT WIPEOUT
+                email: formData.email,
+                full_name: formData.full_name,
+                reason_of_change: formData.reason_of_change,
                 is_noted_by_checker: 1, // ✅ AUTO NOTE
+                instructor_email: formData.email,
             };
 
             await axios.put(

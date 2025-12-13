@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
+import Loading from '../../components/common/Loading';
 
 export default function RLICReviewRoomChangeForm() {
     const { id } = useParams();
@@ -12,6 +13,7 @@ export default function RLICReviewRoomChangeForm() {
     const [formData, setFormData] = useState(null);
     const [decision, setDecision] = useState(""); // approved | rejected
     const [loading, setLoading] = useState(true);
+    const [users, setUsers] = useState([]);
 
     // ✅ LOAD FORM BY ID
     useEffect(() => {
@@ -33,6 +35,27 @@ export default function RLICReviewRoomChangeForm() {
         loadForm();
     }, [id]);
 
+    /* ----------------------------------------
+       Fetch ALL users ONCE
+    ---------------------------------------- */
+    const fetchUsers = async () => {
+        try {
+            const res = await axios.get(
+                `${import.meta.env.VITE_API_URL}/user/uzers`
+            );
+
+            setUsers(res.data);
+
+        } catch (error) {
+            console.log("Failed to load users data:", error);
+            alert("Failed to load users data");
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
     const handleBackArrow = () => {
         navigate(-1);
     };
@@ -41,21 +64,35 @@ export default function RLICReviewRoomChangeForm() {
     const handleSubmitReview = async (e) => {
         e.preventDefault();
 
+        setLoading(true);
+
         if (!decision) {
             alert("Please select Approve or Reject.");
             return;
         }
 
         try {
+            const selectedRole = "checker";
+
+            const checkers = users
+                .filter(u => u.user_role === selectedRole)
+                .map(u => u.email);
+
             const payload = {
                 ...formData, // ✅ KEEP ALL ORIGINAL DATA (PREVENT WIPE)
+                email: formData.email,
+                full_name: formData.full_name,
+                reason_of_change: formData.reason_of_change,
                 is_approved_room_loading: decision === "approved" ? 1 : 0,
+                checker_email: checkers,
             };
 
             await axios.put(
                 `${import.meta.env.VITE_API_URL}/roomchange/update/${id}`,
                 payload
             );
+
+            setLoading(false); // loading to false
 
             alert("RLIC review submitted successfully!");
             navigate("/rlic/home");
@@ -66,7 +103,7 @@ export default function RLICReviewRoomChangeForm() {
         }
     };
 
-    if (loading) return <p className="p-6">Loading request...</p>;
+    if (loading) return <Loading />;
     if (!formData) return <p className="p-6">Form not found.</p>;
 
     return (

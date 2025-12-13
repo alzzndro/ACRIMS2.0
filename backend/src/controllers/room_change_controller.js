@@ -53,7 +53,7 @@ export async function addRoomChangeForm(req, res) {
         });
 
         if (dpd_emails) {
-            await mailer.sendEmailToDpd(email, dpd_emails, reason_of_change);
+            await mailer.sendEmailToDpd(email, dpd_emails, full_name, reason_of_change);
             return res.status(201).json({
                 success: true,
                 message: "Room change form added successfully!",
@@ -113,7 +113,7 @@ export async function deleteRoomChangeForm(req, res) {
 // PUT update form by ID
 export async function updateRoomChangeForm(req, res) {
     try {
-        const { email, rlic_email, reason_of_change, is_approved_head, full_name } = req.body;
+        const { email, rlic_email, checker_email, reason_of_change, is_approved_head, full_name, is_approved_room_loading, instructor_email, is_noted_by_checker } = req.body;
 
         const result = await service.updateRoomChangeForm(req.body, req.params.id);
 
@@ -123,6 +123,24 @@ export async function updateRoomChangeForm(req, res) {
                 success: true,
                 message: "Room change form added successfully!",
                 emails: rlic_email
+            });
+        }
+
+        if (checker_email && is_approved_room_loading === 1) {
+            await mailer.sendEmailToChecker(email, checker_email, full_name, reason_of_change);
+            return res.status(201).json({
+                success: true,
+                message: "Room change form added successfully!",
+                emails: checker_email
+            });
+        }
+
+        if (instructor_email && is_noted_by_checker === 1) {
+            await mailer.sendEmailToInstructor(email, instructor_email, full_name, reason_of_change);
+            return res.status(201).json({
+                success: true,
+                message: "Room change form added successfully!",
+                emails: instructor_email
             });
         }
 

@@ -52,7 +52,7 @@ monitoring@asiancollege.edu
 export async function sendEmailToDpd(from, to, full_name, message) {
     try {
         const emailInfo = {
-            from: `"Asian College Instructor" <${from}>`,
+            from: `"Asian College Instructor" <${process.env.MAILER_EMAIL}>`,
             to,
             subject: `Room Change Request from ${full_name}`,
             text: `Good day,
@@ -127,6 +127,93 @@ monitoring@asiancollege.edu
     }
 }
 
+// ---------------------------------------------------------------------
+// From RLIC to Checker
+// ---------------------------------------------------------------------
+
+export async function sendEmailToChecker(from, to, full_name, message) {
+    try {
+        const emailInfo = {
+            from: `"Asian College Instructor" <${process.env.MAILER_EMAIL}>`,
+            to,
+            subject: `Room Change Request from ${full_name}`,
+            text: `Good day,
+
+${full_name} has submitted a room change request.
+
+Reason for Room Change:
+${message}
+
+To review the full details of the submitted form, please visit the official monitoring system:
+acrims.netlify.app
+
+Your prompt attention to this request would be greatly appreciated. Should you require any additional information, please feel free to reach out.
+
+Thank you and have a great day.
+
+Sincerely,
+Asian College Instructor
+Asian College Monitoring Team
+Asian College
+monitoring@asiancollege.edu
+`,
+        };
+
+        const info = await transporter.sendMail(emailInfo);
+        console.log(`Message sent to ${to}: ${info.messageId}`);
+        return info;
+
+    } catch (error) {
+        console.error("Error sending email:", error);
+    }
+}
+
+// ---------------------------------------------------------------------
+// From Checker to Instructor (Approved Notification)
+// ---------------------------------------------------------------------
+
+export async function sendEmailToInstructor(from, to, full_name, message) {
+    try {
+        const emailInfo = {
+            from: `"Asian College Instructor" <${process.env.MAILER_EMAIL}>`,
+            to,
+            subject: `Approved Room Change Request for ${full_name}`,
+            text: `Good day,
+
+This is to formally inform you that the room change request submitted by ${full_name} has been reviewed and approved.
+
+Approval Details:
+- Approved by: Program Chair
+- Approved by: Room Loading In-Charge
+- Noted by: Checker
+
+Instructor's Reason for Room Change:
+${message}
+
+The Checker has officially noted the instructor’s request and confirmed that all required approvals have been secured.
+
+For complete details and records, you may access the official monitoring system at:
+acrims.netlify.app
+
+Should you have any questions or require further clarification, please do not hesitate to contact us.
+
+Thank you and have a great day.
+
+Sincerely,
+Asian College Monitoring Team
+Asian College
+monitoring@asiancollege.edu
+`,
+        };
+
+        const info = await transporter.sendMail(emailInfo);
+        console.log(`Message sent to ${to}: ${info.messageId}`);
+        return info;
+
+    } catch (error) {
+        console.error("Error sending email:", error);
+    }
+}
 
 
 console.log("MAILER_EMAIL:", process.env.MAILER_EMAIL);

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
+import Loading from '../../components/common/Loading';
 
 export default function ReviewRoomChangeForm() {
     const { id } = useParams();
@@ -63,6 +64,8 @@ export default function ReviewRoomChangeForm() {
     const handleSubmitReview = async (e) => {
         e.preventDefault();
 
+        setLoading(true);
+
         if (!decision) {
             alert("Please select Approve or Reject.");
             return;
@@ -90,6 +93,8 @@ export default function ReviewRoomChangeForm() {
                 payload
             );
 
+            setLoading(false);
+
             alert("Review submitted successfully!");
             navigate("/dpd/home");
 
@@ -99,7 +104,7 @@ export default function ReviewRoomChangeForm() {
         }
     };
 
-    if (loading) return <p className="p-6">Loading request...</p>;
+    if (loading) return <Loading />;
     if (!formData) return <p className="p-6">Form not found.</p>;
 
     return (

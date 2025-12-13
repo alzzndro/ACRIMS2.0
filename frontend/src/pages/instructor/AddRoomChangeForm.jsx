@@ -3,6 +3,7 @@ import axios from "axios";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { to24HourNow } from "../../utils/timeFormat";
+import Loading from '../../components/common/Loading';
 
 export default function AddRoomChangeForm() {
     const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ export default function AddRoomChangeForm() {
 
     const [users, setUsers] = useState([]);      // store ALL users
     const [dpdEmails, setDpdEmails] = useState([]); // emails that match selected department
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
     const currentTimeIn24Hour = to24HourNow();
@@ -39,6 +41,8 @@ export default function AddRoomChangeForm() {
         } catch (error) {
             console.log("Failed to load users data:", error);
             alert("Failed to load users data");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -85,6 +89,8 @@ export default function AddRoomChangeForm() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        setLoading(true);
+
         try {
             let storedUser = localStorage.getItem("user");
 
@@ -112,6 +118,8 @@ export default function AddRoomChangeForm() {
                 updatedFormData
             );
 
+            setLoading(false);
+
             alert("Form submitted successfully!");
             navigate("/instructor/home");
 
@@ -120,6 +128,8 @@ export default function AddRoomChangeForm() {
             alert("Failed to submit form");
         }
     };
+
+    if (loading) return <Loading />;
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
